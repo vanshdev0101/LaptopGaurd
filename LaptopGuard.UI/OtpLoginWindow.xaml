@@ -1,0 +1,101 @@
+<Window x:Class="LaptopGuard.UI.OtpLoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Laptop Guard — Authentication"
+        Height="420" Width="420"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#0a1220"
+        BorderBrush="#1e3a5f"
+        BorderThickness="1">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="6"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top accent line -->
+        <Rectangle Grid.Row="0" Fill="#2563eb"/>
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Width="300">
+
+            <!-- Icon -->
+            <Border Background="#111e33" CornerRadius="50"
+                    Width="70" Height="70" HorizontalAlignment="Center"
+                    BorderBrush="#1e4976" BorderThickness="2"
+                    Margin="0,0,0,20">
+                <TextBlock Text="🔒" FontSize="32"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Title -->
+            <TextBlock Text="LAPTOP GUARD"
+                       FontSize="18" FontWeight="Bold"
+                       Foreground="#e2e8f0" FontFamily="Segoe UI"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="SECURITY MONITOR"
+                       FontSize="9" Foreground="#2563eb"
+                       FontFamily="Segoe UI" FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Margin="0,2,0,24"/>
+
+            <!-- Instruction -->
+            <TextBlock Text="Enter your Google Authenticator OTP"
+                       FontSize="11" Foreground="#64748b"
+                       FontFamily="Segoe UI"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,12"/>
+
+            <!-- OTP Input -->
+            <Border Background="#111e33" CornerRadius="6"
+                    BorderBrush="#1e4976" BorderThickness="1"
+                    Margin="0,0,0,8">
+                <TextBox x:Name="OtpInput"
+                         FontSize="28" FontFamily="Consolas"
+                         FontWeight="Bold"
+                         Foreground="#3b82f6"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         MaxLength="6"
+                         TextAlignment="Center"
+                         Padding="12,10"
+                         CaretBrush="#3b82f6"
+                         KeyDown="OtpInput_KeyDown"
+                         TextChanged="OtpInput_TextChanged"/>
+            </Border>
+
+            <!-- Error message -->
+            <TextBlock x:Name="ErrorText" Text=""
+                       FontSize="10" Foreground="#ef4444"
+                       FontFamily="Segoe UI"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,12"/>
+
+            <!-- Login button -->
+            <Button x:Name="LoginBtn" Content="VERIFY &amp; ENTER"
+                    Click="LoginBtn_Click"
+                    Height="42" FontSize="12"
+                    FontWeight="Bold" FontFamily="Segoe UI"
+                    Foreground="#e2e8f0" Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="#2563eb" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <TextBlock Text="Check Google Authenticator for the current code"
+                       FontSize="9" Foreground="#1e3a5f"
+                       FontFamily="Segoe UI"
+                       HorizontalAlignment="Center"
+                       Margin="0,12,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>

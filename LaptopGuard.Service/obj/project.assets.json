@@ -1,7 +1,7 @@
 {
   "version": 4,
   "targets": {
-    "net10.0": {
+    "net10.0-windows": {
       "Microsoft.Data.Sqlite/10.0.9": {
         "type": "package",
         "dependencies": {
@@ -794,10 +794,10 @@
           "SQLitePCLRaw.core": "2.1.11"
         },
         "compile": {
-          "lib/net6.0/SQLitePCLRaw.provider.e_sqlite3.dll": {}
+          "lib/net6.0-windows7.0/SQLitePCLRaw.provider.e_sqlite3.dll": {}
         },
         "runtime": {
-          "lib/net6.0/SQLitePCLRaw.provider.e_sqlite3.dll": {}
+          "lib/net6.0-windows7.0/SQLitePCLRaw.provider.e_sqlite3.dll": {}
         }
       },
       "System.Diagnostics.EventLog/10.0.9": {
@@ -2009,7 +2009,7 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net10.0": [
+    "net10.0-windows": [
       "LaptopGuard.Core >= 1.0.0",
       "Microsoft.Extensions.Hosting >= 10.0.9",
       "Microsoft.Extensions.Hosting.WindowsServices >= 10.0.9",
@@ -2039,16 +2039,16 @@
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
-        "net10.0"
+        "net10.0-windows"
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net10.0": {
-          "framework": "net10.0",
-          "targetAlias": "net10.0",
+        "net10.0-windows": {
+          "framework": "net10.0-windows7.0",
+          "targetAlias": "net10.0-windows",
           "projectReferences": {
             "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Core\\LaptopGuard.Core.csproj": {
               "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Core\\LaptopGuard.Core.csproj"
@@ -2069,9 +2069,9 @@
       "SdkAnalysisLevel": "10.0.300"
     },
     "frameworks": {
-      "net10.0": {
-        "framework": "net10.0",
-        "targetAlias": "net10.0",
+      "net10.0-windows": {
+        "framework": "net10.0-windows7.0",
+        "targetAlias": "net10.0-windows",
         "dependencies": {
           "Microsoft.Extensions.Hosting": {
             "target": "Package",
