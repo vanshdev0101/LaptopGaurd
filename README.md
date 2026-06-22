@@ -1,35 +1,42 @@
 # LaptopGuard
 
-LaptopGuard is a Windows security monitoring application designed to detect failed Windows login attempts, capture evidence using the system webcam, and securely store incident information for later review.
+LaptopGuard is a Windows endpoint security monitoring application that detects failed Windows login attempts, captures evidence, stores incident data, and provides a secure remote dashboard for incident review.
 
-The application monitors Windows Security Event Logs and automatically creates incident records whenever a failed authentication attempt is detected.
+The system runs as a Windows Service, monitors Windows Security Event Logs, records authentication failures, captures evidence, and allows secure remote access through an OTP-protected web dashboard.
 
 ## Features
 
-### Current Features
+### Security Monitoring
 
 * Monitor Windows Security Event ID 4625 (Failed Login)
-* SQLite-based incident storage
-* SHA-256 evidence hashing
-* AES file encryption support
-* Centralized application configuration
-* Modular architecture using .NET projects
-* Git version control support
+* Automatic incident creation
+* Timestamped event tracking
+* Failed login history
+* Secure OTP authentication
 
-### Planned Features
+### Evidence Collection
 
-* Webcam photo capture on failed login
-* Multi-frame evidence collection
-* Face detection
-* Google Drive evidence backup
-* WPF dashboard
-* Live activity monitoring
-* Service auto-start and recovery
-* Evidence integrity verification
-* Dashboard authentication
-* Incident reporting and export
+* Webcam photo capture
+* Multi-photo incident support
+* Evidence hashing using SHA-256
+* Encrypted local storage
+* Incident photo gallery
 
----
+### Dashboard
+
+* OTP-protected access
+* Incident log viewer
+* Evidence gallery
+* Incident preview panel
+* Statistics dashboard
+* Remote access through Tailscale
+
+### Storage
+
+* SQLite database
+* Persistent incident history
+* Secure evidence storage
+* Configurable application settings
 
 ## Architecture
 
@@ -43,19 +50,20 @@ LaptopGuard
 │   └── Configuration Management
 │
 ├── LaptopGuard.Service
-│   ├── Event Monitoring
-│   ├── Camera Capture
-│   ├── Background Processing
-│   └── Incident Creation
+│   ├── Windows Event Monitoring
+│   ├── Webcam Capture
+│   ├── Incident Processing
+│   └── Background Services
+│
+├── LaptopGuard.Web
+│   ├── OTP Authentication
+│   ├── Incident Dashboard
+│   ├── Evidence Gallery
+│   └── Statistics API
 │
 └── LaptopGuard.UI
-    ├── Dashboard
-    ├── Photo Gallery
-    ├── Activity Logs
-    └── System Controls
+    └── Future Desktop Interface
 ```
-
----
 
 ## Technology Stack
 
@@ -63,80 +71,30 @@ LaptopGuard
 
 * C#
 * .NET
+* ASP.NET Core Minimal API
 * Windows Service
+
+### Storage
+
 * SQLite
 
 ### Security
 
-* SHA-256
+* SHA-256 Hashing
 * AES Encryption
+* TOTP Authentication
+* Google Authenticator Compatible
 
 ### Monitoring
 
-* Windows Event Logs
-* Event ID 4625
+* Windows Security Event Logs
+* Event ID 4625 Monitoring
 
-### User Interface
+### Remote Access
 
-* WPF
+* Tailscale
 
-### Future Integrations
-
-* OpenCV
-* Google Drive API
-
----
-
-## Project Structure
-
-```text
-LaptopGuard/
-│
-├── LaptopGuard.Core/
-│   ├── AppConfig.cs
-│   ├── Database.cs
-│   ├── Incident.cs
-│   └── SecurityHelper.cs
-│
-├── LaptopGuard.Service/
-│   ├── EventMonitor.cs
-│   ├── Worker.cs
-│   └── Program.cs
-│
-├── LaptopGuard.UI/
-│
-├── .gitignore
-└── LaptopGuard.slnx
-```
-
----
-
-## Current Development Status
-
-### Core Layer
-
-Completed:
-
-* Incident Model
-* SQLite Database Layer
-* SHA-256 Hashing
-* AES Encryption Utilities
-* Configuration System
-
-### Service Layer
-
-In Progress:
-
-* Event Monitoring
-* Failed Login Detection
-
-### UI Layer
-
-Not Started
-
----
-
-## Planned Workflow
+## Workflow
 
 ```text
 Failed Windows Login
@@ -145,65 +103,57 @@ Failed Windows Login
    Event ID 4625
           │
           ▼
-    Event Monitor
+  LaptopGuard Service
           │
           ▼
-    Capture Photos
+   Capture Evidence
           │
           ▼
-    Generate Hash
+   Generate Hashes
           │
           ▼
-     Encrypt Data
+   Store Incident
           │
           ▼
-    Save Incident
+    SQLite Database
           │
           ▼
-   Upload Evidence
-          │
-          ▼
-  Update Dashboard
+     Web Dashboard
 ```
 
----
+## Project Structure
 
-## Security Goals
+```text
+LaptopGuard/
+│
+├── LaptopGuard.Core/
+├── LaptopGuard.Service/
+├── LaptopGuard.Web/
+├── LaptopGuard.UI/
+│
+├── LaptopGuard.slnx
+└── README.md
+```
 
-* Detect unauthorized access attempts
+## Security Objectives
+
+* Detect unauthorized login attempts
 * Preserve evidence integrity
 * Prevent evidence tampering
 * Maintain encrypted local storage
-* Provide off-device backups
-* Operate independently as a Windows Service
+* Support secure remote monitoring
+* Operate continuously as a Windows Service
 
----
+## Future Enhancements
 
-## Roadmap
-
-### Phase 1
-
-* Complete Core Layer
-* Complete Event Monitoring
-
-### Phase 2
-
-* Implement Camera Capture
-* Integrate Worker Service
-* Validate End-to-End Pipeline
-
-### Phase 3
-
-* Build WPF Dashboard
-* Add Incident Management Features
-
-### Phase 4
-
-* Google Drive Synchronization
-* Face Detection
-* Advanced Security Controls
-
----
+* Telegram notifications
+* Real-time dashboard updates
+* Face detection
+* Multi-monitor screenshot capture
+* Evidence export (PDF/CSV)
+* Device health monitoring
+* Google Drive backup
+* USB activity monitoring
 
 ## License
 
