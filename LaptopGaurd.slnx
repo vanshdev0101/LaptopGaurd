@@ -2,4 +2,5 @@
   <Project Path="LaptopGuard.Core/LaptopGuard.Core.csproj" />
   <Project Path="LaptopGuard.Service/LaptopGuard.Service.csproj" />
   <Project Path="LaptopGuard.UI/LaptopGuard.UI.csproj" />
+  <Project Path="LaptopGuard.Web/LaptopGuard.Web.csproj" />
 </Solution>

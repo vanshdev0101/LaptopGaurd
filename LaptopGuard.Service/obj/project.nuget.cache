@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "LyC50BUt02Y=",
+  "dgSpecHash": "yLCDIVK4OPs=",
   "success": true,
   "projectFilePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
   "expectedPackageFiles": [
@@ -36,6 +36,7 @@
     "C:\\Users\\vr740\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.9\\microsoft.extensions.primitives.10.0.9.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\opencvsharp4\\4.13.0.20260602\\opencvsharp4.4.13.0.20260602.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\opencvsharp4.runtime.win\\4.13.0.20260602\\opencvsharp4.runtime.win.4.13.0.20260602.nupkg.sha512",
+    "C:\\Users\\vr740\\.nuget\\packages\\otp.net\\1.4.1\\otp.net.1.4.1.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.11\\sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
@@ -43,5 +44,18 @@
     "C:\\Users\\vr740\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.9\\system.diagnostics.eventlog.10.0.9.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.9\\system.serviceprocess.servicecontroller.10.0.9.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q",
+      "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
+      "libraryId": "SQLitePCLRaw.lib.e_sqlite3",
+      "targetGraphs": [
+        "net10.0-windows"
+      ]
+    }
+  ]
 }
