@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "uYikXfCEjfk=",
+  "dgSpecHash": "mSGdpIZO3SU=",
   "success": true,
   "projectFilePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
   "expectedPackageFiles": [
@@ -13,9 +13,22 @@
     "C:\\Users\\vr740\\.nuget\\packages\\otp.net\\1.4.1\\otp.net.1.4.1.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.11\\sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
-    "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
+    "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\3.50.3\\sqlitepclraw.lib.e_sqlite3.3.50.3.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.11\\sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.9\\system.serviceprocess.servicecontroller.10.0.9.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1603",
+      "level": "Warning",
+      "message": "LaptopGuard.Core depends on SQLitePCLRaw.lib.e_sqlite3 (>= 2.1.12) but SQLitePCLRaw.lib.e_sqlite3 2.1.12 was not found. SQLitePCLRaw.lib.e_sqlite3 3.50.3 was resolved instead.",
+      "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
+      "libraryId": "SQLitePCLRaw.lib.e_sqlite3",
+      "targetGraphs": [
+        "net10.0-windows"
+      ]
+    }
+  ]
 }

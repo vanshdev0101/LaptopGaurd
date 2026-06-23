@@ -12,7 +12,7 @@ public class Worker : BackgroundService
     private readonly EventMonitor _monitor;
     private readonly string _photoFolder = @"C:\ProgramData\LaptopGuard\Photos";
     private readonly string _keyPath = @"C:\ProgramData\LaptopGuard\guard.key";
-
+    private readonly UsbMonitor _usbMonitor;
     public Worker(ILogger<Worker> logger)
     {
         _logger = logger;
@@ -21,6 +21,7 @@ public class Worker : BackgroundService
         _db = new Database(dbPath);
         _camera = new CameraCapture(_photoFolder);
         _monitor = new EventMonitor();
+        _usbMonitor = new UsbMonitor(_db, logger);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,12 +29,14 @@ public class Worker : BackgroundService
         _logger.LogInformation("[*] LaptopGuard Service started.");
         _monitor.FailedLogonDetected += OnFailedLogon;
         _monitor.Start();
+        _usbMonitor.Start();
 
         while (!stoppingToken.IsCancellationRequested)
             await Task.Delay(5000, stoppingToken);
 
         _monitor.Stop();
         _logger.LogInformation("[*] LaptopGuard Service stopped.");
+        _usbMonitor.Dispose();
     }
 
     private void OnFailedLogon(EventRecord record)
@@ -66,7 +69,6 @@ public class Worker : BackgroundService
                 _logger.LogInformation("[+] Photo captured: {Photo}", photo);
             }
 
-            // ONE incident per failed login event
             var incident = new Incident
             {
                 Timestamp = DateTime.Now,
@@ -78,9 +80,15 @@ public class Worker : BackgroundService
                 PhotoHashes = string.Join(",", hashes),
                 Uploaded = false
             };
+
             _db.SaveIncident(incident);
             _logger.LogInformation("[+] Incident #{Id} saved with {Count} photos.",
                                    incident.Id, photos.Count);
+
+            // NOW capture running apps — incident exists and has a valid Id
+            var runningApps = AppMonitor.GetRunningApps(incident.Id);
+            _db.SaveAppEvents(runningApps);
+            _logger.LogInformation("[+] Captured {Count} running apps.", runningApps.Count);
         }
         catch (Exception ex)
         {

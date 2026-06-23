@@ -65,6 +65,53 @@ app.MapGet("/api/stats", (string token) =>
     });
 });
 
+// ── API: USB events ───────────────────────────────────────────────────────────
+app.MapGet("/api/usb", (string token) =>
+{
+    if (!VerifyOtp(token)) return Results.Unauthorized();
+    var events = db.GetUsbEvents().Select(e => new
+    {
+        e.Id,
+        e.Timestamp,
+        e.DeviceName,
+        e.EventType
+    });
+    return Results.Ok(events);
+});
+
+// ── API: app events ───────────────────────────────────────────────────────────
+app.MapGet("/api/apps", (string token) =>
+{
+    if (!VerifyOtp(token)) return Results.Unauthorized();
+    var apps = db.GetRecentApps().Select(a => new
+    {
+        a.Id,
+        a.Timestamp,
+        a.AppName,
+        a.ExecutablePath,
+        a.Publisher,
+        a.ProcessId,
+        a.IncidentId
+    });
+    return Results.Ok(apps);
+});
+
+// ── API: apps by incident ─────────────────────────────────────────────────────
+app.MapGet("/api/apps/{incidentId}", (int incidentId, string token) =>
+{
+    if (!VerifyOtp(token)) return Results.Unauthorized();
+    var apps = db.GetAppEvents(incidentId).Select(a => new
+    {
+        a.Id,
+        a.Timestamp,
+        a.AppName,
+        a.ExecutablePath,
+        a.Publisher,
+        a.ProcessId
+    });
+    return Results.Ok(apps);
+});
+
 // ── Web UI ────────────────────────────────────────────────────────────────────
 app.MapGet("/", () => Results.Content(LaptopGuard.Web.Html.Page, "text/html"));
 

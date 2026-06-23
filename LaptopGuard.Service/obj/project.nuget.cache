@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "yLCDIVK4OPs=",
+  "dgSpecHash": "S6Ihc4YKadc=",
   "success": true,
   "projectFilePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
   "expectedPackageFiles": [
@@ -39,16 +39,18 @@
     "C:\\Users\\vr740\\.nuget\\packages\\otp.net\\1.4.1\\otp.net.1.4.1.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.11\\sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
-    "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
+    "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\3.50.3\\sqlitepclraw.lib.e_sqlite3.3.50.3.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.11\\sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
+    "C:\\Users\\vr740\\.nuget\\packages\\system.codedom\\10.0.9\\system.codedom.10.0.9.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.9\\system.diagnostics.eventlog.10.0.9.nupkg.sha512",
+    "C:\\Users\\vr740\\.nuget\\packages\\system.management\\10.0.9\\system.management.10.0.9.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.9\\system.serviceprocess.servicecontroller.10.0.9.nupkg.sha512"
   ],
   "logs": [
     {
-      "code": "NU1903",
+      "code": "NU1603",
       "level": "Warning",
-      "message": "Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q",
+      "message": "LaptopGuard.Service depends on SQLitePCLRaw.lib.e_sqlite3 (>= 2.1.12) but SQLitePCLRaw.lib.e_sqlite3 2.1.12 was not found. SQLitePCLRaw.lib.e_sqlite3 3.50.3 was resolved instead.",
       "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
       "warningLevel": 1,
       "filePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",

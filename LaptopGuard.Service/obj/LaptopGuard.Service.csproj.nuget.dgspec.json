@@ -59,6 +59,10 @@
             "Otp.NET": {
               "target": "Package",
               "version": "[1.4.1, )"
+            },
+            "SQLitePCLRaw.lib.e_sqlite3": {
+              "target": "Package",
+              "version": "[2.1.12, )"
             }
           },
           "imports": [
@@ -422,6 +426,14 @@
             "OpenCvSharp4.runtime.win": {
               "target": "Package",
               "version": "[4.13.0.20260602, )"
+            },
+            "SQLitePCLRaw.lib.e_sqlite3": {
+              "target": "Package",
+              "version": "[2.1.12, )"
+            },
+            "System.Management": {
+              "target": "Package",
+              "version": "[10.0.9, )"
             }
           },
           "imports": [
