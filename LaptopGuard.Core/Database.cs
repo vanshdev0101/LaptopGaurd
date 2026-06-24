@@ -34,17 +34,17 @@ public class Database
 
         cmd.CommandText = @"
             CREATE TABLE IF NOT EXISTS UsbEvents (
-                Id            INTEGER PRIMARY KEY AUTOINCREMENT,
-                Timestamp     TEXT    NOT NULL,
-                EventType     TEXT    NOT NULL,
-                DeviceName    TEXT    NOT NULL DEFAULT '',
-                DeviceType    TEXT    NOT NULL DEFAULT '',
-                VendorId      TEXT    NOT NULL DEFAULT '',
-                ProductId     TEXT    NOT NULL DEFAULT '',
-                SerialNumber  TEXT    NOT NULL DEFAULT '',
-                DriveLetter   TEXT    NOT NULL DEFAULT '',
+                Id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp      TEXT    NOT NULL,
+                EventType      TEXT    NOT NULL,
+                DeviceName     TEXT    NOT NULL DEFAULT '',
+                DeviceType     TEXT    NOT NULL DEFAULT '',
+                VendorId       TEXT    NOT NULL DEFAULT '',
+                ProductId      TEXT    NOT NULL DEFAULT '',
+                SerialNumber   TEXT    NOT NULL DEFAULT '',
+                DriveLetter    TEXT    NOT NULL DEFAULT '',
                 DuringIncident INTEGER NOT NULL DEFAULT 0
-    );";
+            );";
         cmd.ExecuteNonQuery();
 
         cmd.CommandText = @"
@@ -56,7 +56,7 @@ public class Database
                 Publisher      TEXT    NOT NULL DEFAULT '',
                 ProcessId      INTEGER NOT NULL DEFAULT 0,
                 IncidentId     INTEGER NOT NULL DEFAULT 0
-    );";
+            );";
         cmd.ExecuteNonQuery();
     }
 
@@ -108,6 +108,32 @@ public class Database
             });
         }
         return incidents;
+    }
+
+    public Incident? GetIncidentById(int id)
+    {
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT * FROM Incidents WHERE Id = $id;";
+        cmd.Parameters.AddWithValue("$id", id);
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return new Incident
+            {
+                Id = reader.GetInt32(0),
+                Timestamp = DateTime.Parse(reader.GetString(1)),
+                Username = reader.GetString(2),
+                LogonType = reader.GetInt32(3),
+                FailureReason = reader.GetString(4),
+                EventRecordId = reader.GetInt64(5),
+                Uploaded = reader.GetInt32(6) == 1,
+                PhotoPaths = reader.GetString(7),
+                PhotoHashes = reader.GetString(8)
+            };
+        }
+        return null;
     }
 
     public bool IsEventAlreadyProcessed(long eventRecordId)
@@ -180,12 +206,12 @@ public class Database
         conn.Open();
         var cmd = conn.CreateCommand();
         cmd.CommandText = @"
-        INSERT INTO UsbEvents
-            (Timestamp, EventType, DeviceName, DeviceType,
-             VendorId, ProductId, SerialNumber, DriveLetter, DuringIncident)
-        VALUES
-            ($ts, $type, $name, $dtype,
-             $vid, $pid, $serial, $drive, $incident);";
+            INSERT INTO UsbEvents
+                (Timestamp, EventType, DeviceName, DeviceType,
+                 VendorId, ProductId, SerialNumber, DriveLetter, DuringIncident)
+            VALUES
+                ($ts, $type, $name, $dtype,
+                 $vid, $pid, $serial, $drive, $incident);";
         cmd.Parameters.AddWithValue("$ts", usbEvent.Timestamp.ToString("o"));
         cmd.Parameters.AddWithValue("$type", usbEvent.EventType);
         cmd.Parameters.AddWithValue("$name", usbEvent.DeviceName);
@@ -232,8 +258,8 @@ public class Database
         conn.Open();
         var cmd = conn.CreateCommand();
         cmd.CommandText = @"SELECT * FROM UsbEvents 
-                        WHERE Timestamp >= $since 
-                        ORDER BY Timestamp DESC;";
+                            WHERE Timestamp >= $since 
+                            ORDER BY Timestamp DESC;";
         cmd.Parameters.AddWithValue("$since",
             DateTime.UtcNow.AddHours(-hours).ToString("o"));
         using var reader = cmd.ExecuteReader();
@@ -264,10 +290,10 @@ public class Database
         {
             var cmd = conn.CreateCommand();
             cmd.CommandText = @"
-            INSERT INTO AppEvents
-                (Timestamp, AppName, ExecutablePath, Publisher, ProcessId, IncidentId)
-            VALUES
-                ($ts, $name, $path, $pub, $pid, $incident);";
+                INSERT INTO AppEvents
+                    (Timestamp, AppName, ExecutablePath, Publisher, ProcessId, IncidentId)
+                VALUES
+                    ($ts, $name, $path, $pub, $pid, $incident);";
             cmd.Parameters.AddWithValue("$ts", app.Timestamp.ToString("o"));
             cmd.Parameters.AddWithValue("$name", app.AppName);
             cmd.Parameters.AddWithValue("$path", app.ExecutablePath);
@@ -309,8 +335,8 @@ public class Database
         conn.Open();
         var cmd = conn.CreateCommand();
         cmd.CommandText = @"SELECT * FROM AppEvents 
-                        WHERE IncidentId = $id 
-                        ORDER BY Timestamp DESC;";
+                            WHERE IncidentId = $id 
+                            ORDER BY Timestamp DESC;";
         cmd.Parameters.AddWithValue("$id", incidentId);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -326,6 +352,6 @@ public class Database
                 IncidentId = reader.GetInt32(6)
             });
         }
-        return list;
+        return list; // ← this was missing
     }
 }
