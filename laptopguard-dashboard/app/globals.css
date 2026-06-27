@@ -1,26 +1,141 @@
 @import "tailwindcss";
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    /* Base */
+    --bg: #0e0f11;
+    --bg-secondary: #13151a;
+    --bg-card: rgba(255,255,255,0.03);
+    --bg-hover: rgba(255,255,255,0.05);
+    /* Borders */
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.12);
+    /* Text */
+    --text: #e8e9eb;
+    --text-secondary: #9a9da6;
+    --text-muted: #5a5e6b;
+    /* Pastel accents */
+    --primary: #a78bfa; /* pastel violet */
+    --primary-dim: rgba(167,139,250,0.12);
+    --blue: #7dd3fc; /* pastel sky blue */
+    --blue-dim: rgba(125,211,252,0.1);
+    --red: #fca5a5; /* pastel red */
+    --red-dim: rgba(252,165,165,0.1);
+    --yellow: #fcd34d; /* pastel amber */
+    --yellow-dim: rgba(252,211,77,0.1);
+    --green: #86efac; /* pastel green */
+    --green-dim: rgba(134,239,172,0.1);
+    --pink: #f9a8d4; /* pastel pink */
+    /* Cement grays */
+    --cement-1: #1a1c22;
+    --cement-2: #22242c;
+    --cement-3: #2a2d38;
+    /* Effects */
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --radius: 14px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+    scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--cement-3);
+    border-radius: 999px;
+}
+
+::selection {
+    background: var(--primary);
+    color: #000;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.glass {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+    .glass:hover {
+        border-color: var(--border-strong);
+    }
+
+.card-padding {
+    padding: 20px;
+}
+
+.title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.fade-up {
+    animation: fadeUp 0.4s ease;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
 }

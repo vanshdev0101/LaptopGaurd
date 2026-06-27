@@ -2,16 +2,22 @@ using LaptopGuard.Core;
 using OtpNet;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// only listen on Tailscale IP
+builder.Services.AddCors();
 builder.WebHost.UseUrls("http://100.92.192.6:5000");
 
 var app = builder.Build();
 
+app.UseCors(policy => policy
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+
 var db = new Database(@"C:\ProgramData\LaptopGuard\laptopguard.db");
 var photoFolder = @"C:\ProgramData\LaptopGuard\Photos";
 
-// ── OTP Verification ──────────────────────────────────────────────────────────
+// Simple session store — token → expiry
+var sessions = new Dictionary<string, DateTime>();
+
 bool VerifyOtp(string code)
 {
     try
@@ -24,7 +30,15 @@ bool VerifyOtp(string code)
     catch { return false; }
 }
 
-// ── Serve photos ──────────────────────────────────────────────────────────────
+bool VerifySession(string? token)
+{
+    if (string.IsNullOrEmpty(token)) return false;
+    if (!sessions.TryGetValue(token, out var expiry)) return false;
+    if (DateTime.UtcNow > expiry) { sessions.Remove(token); return false; }
+    return true;
+}
+
+// Photos
 app.MapGet("/photo/{filename}", (string filename) =>
 {
     var path = Path.Combine(photoFolder, filename);
@@ -32,14 +46,36 @@ app.MapGet("/photo/{filename}", (string filename) =>
     return Results.File(path, "image/jpeg");
 });
 
-// ── API: verify OTP ───────────────────────────────────────────────────────────
+// OTP Verify → returns session token
 app.MapPost("/api/verify", (OtpRequest req) =>
-    Results.Ok(new { success = VerifyOtp(req.Code) }));
-
-// ── API: incidents ────────────────────────────────────────────────────────────
-app.MapGet("/api/incidents", (string token) =>
 {
-    if (!VerifyOtp(token)) return Results.Unauthorized();
+    if (!VerifyOtp(req.Code))
+        return Results.Ok(new { success = false, sessionToken = (string?)null });
+
+    // Create 8-hour session token
+    var sessionToken = Guid.NewGuid().ToString("N");
+    sessions[sessionToken] = DateTime.UtcNow.AddHours(8);
+
+    return Results.Ok(new { success = true, sessionToken });
+});
+
+// Stats
+app.MapGet("/api/stats", (string? token) =>
+{
+    if (!VerifySession(token)) return Results.Unauthorized();
+    return Results.Ok(new
+    {
+        total = db.GetTotalCount(),
+        today = db.GetTodayCount(),
+        photos = Directory.Exists(photoFolder)
+            ? Directory.GetFiles(photoFolder, "*.jpg").Length : 0
+    });
+});
+
+// Incidents
+app.MapGet("/api/incidents", (string? token) =>
+{
+    if (!VerifySession(token)) return Results.Unauthorized();
     var incidents = db.GetAllIncidents().Select(i => new
     {
         i.Id,
@@ -52,37 +88,47 @@ app.MapGet("/api/incidents", (string token) =>
     return Results.Ok(incidents);
 });
 
-// ── API: stats ────────────────────────────────────────────────────────────────
-app.MapGet("/api/stats", (string token) =>
+// Single Incident
+app.MapGet("/api/incidents/{id:int}", (int id, string? token) =>
 {
-    if (!VerifyOtp(token)) return Results.Unauthorized();
+    if (!VerifySession(token)) return Results.Unauthorized();
+    var incident = db.GetIncidentById(id);
+    if (incident == null) return Results.NotFound();
     return Results.Ok(new
     {
-        total = db.GetTotalCount(),
-        today = db.GetTodayCount(),
-        photos = Directory.Exists(photoFolder)
-                    ? Directory.GetFiles(photoFolder, "*.jpg").Length : 0
+        incident.Id,
+        incident.Timestamp,
+        incident.Username,
+        incident.LogonType,
+        incident.FailureReason,
+        Photos = incident.GetPhotos().Select(p => $"/photo/{Path.GetFileName(p)}")
     });
 });
 
-// ── API: USB events ───────────────────────────────────────────────────────────
-app.MapGet("/api/usb", (string token) =>
+// USB Events
+app.MapGet("/api/usb", (string? token) =>
 {
-    if (!VerifyOtp(token)) return Results.Unauthorized();
+    if (!VerifySession(token)) return Results.Unauthorized();
     var events = db.GetUsbEvents().Select(e => new
     {
         e.Id,
         e.Timestamp,
         e.DeviceName,
-        e.EventType
+        e.EventType,
+        e.DeviceType,
+        e.VendorId,
+        e.ProductId,
+        e.SerialNumber,
+        e.DriveLetter,
+        e.DuringIncident
     });
     return Results.Ok(events);
 });
 
-// ── API: app events ───────────────────────────────────────────────────────────
-app.MapGet("/api/apps", (string token) =>
+// Applications
+app.MapGet("/api/apps", (string? token) =>
 {
-    if (!VerifyOtp(token)) return Results.Unauthorized();
+    if (!VerifySession(token)) return Results.Unauthorized();
     var apps = db.GetRecentApps().Select(a => new
     {
         a.Id,
@@ -96,10 +142,10 @@ app.MapGet("/api/apps", (string token) =>
     return Results.Ok(apps);
 });
 
-// ── API: apps by incident ─────────────────────────────────────────────────────
-app.MapGet("/api/apps/{incidentId}", (int incidentId, string token) =>
+// Applications for Incident
+app.MapGet("/api/apps/{incidentId:int}", (int incidentId, string? token) =>
 {
-    if (!VerifyOtp(token)) return Results.Unauthorized();
+    if (!VerifySession(token)) return Results.Unauthorized();
     var apps = db.GetAppEvents(incidentId).Select(a => new
     {
         a.Id,
@@ -112,8 +158,9 @@ app.MapGet("/api/apps/{incidentId}", (int incidentId, string token) =>
     return Results.Ok(apps);
 });
 
-// ── Web UI ────────────────────────────────────────────────────────────────────
-app.MapGet("/", () => Results.Content(LaptopGuard.Web.Html.Page, "text/html"));
+// Dashboard
+app.MapGet("/", () =>
+    Results.Content(LaptopGuard.Web.Html.Page, "text/html"));
 
 app.Run();
 
