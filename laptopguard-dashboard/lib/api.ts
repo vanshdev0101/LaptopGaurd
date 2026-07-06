@@ -18,6 +18,14 @@ export interface Incident {
 }
 
 export interface UsbEvent {
+    Timestamp: string | number | Date;
+    DeviceName: any;
+    DeviceType: any;
+    SerialNumber: any;
+    DriveLetter: any;
+    DuringIncident: unknown;
+    Id: Key | null | undefined;
+    EventType: string;
     id: number;
     timestamp: string;
     eventType: string;
@@ -37,7 +45,7 @@ export interface AppEvent {
     executablePath: string;
     publisher: string;
     processId: number;
-    incidentId: number;
+    incidentId: number | null;
 }
 
 export async function getStats(token: string): Promise<Stats> {
@@ -54,6 +62,13 @@ export async function getIncidents(token: string): Promise<Incident[]> {
     return r.json();
 }
 
+export async function getIncidentById(id: number, token: string): Promise<Incident> {
+    const r = await fetch(`${BASE}/api/incidents/${id}?token=${token}`, { cache: 'no-store' });
+    if (r.status === 401) throw new Error('Unauthorized');
+    if (!r.ok) throw new Error('ServerError');
+    return r.json();
+}
+
 export async function getUsbEvents(token: string): Promise<UsbEvent[]> {
     const r = await fetch(`${BASE}/api/usb?token=${token}`, { cache: 'no-store' });
     if (r.status === 401) throw new Error('Unauthorized');
@@ -63,6 +78,13 @@ export async function getUsbEvents(token: string): Promise<UsbEvent[]> {
 
 export async function getAppEvents(token: string): Promise<AppEvent[]> {
     const r = await fetch(`${BASE}/api/apps?token=${token}`, { cache: 'no-store' });
+    if (r.status === 401) throw new Error('Unauthorized');
+    if (!r.ok) throw new Error('ServerError');
+    return r.json();
+}
+
+export async function getAppEventsByIncident(incidentId: number, token: string): Promise<AppEvent[]> {
+    const r = await fetch(`${BASE}/api/apps/${incidentId}?token=${token}`, { cache: 'no-store' });
     if (r.status === 401) throw new Error('Unauthorized');
     if (!r.ok) throw new Error('ServerError');
     return r.json();

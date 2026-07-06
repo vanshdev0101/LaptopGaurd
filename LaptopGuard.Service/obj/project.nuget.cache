@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "S6Ihc4YKadc=",
+  "dgSpecHash": "q9Gaynstli8=",
   "success": true,
-  "projectFilePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
+  "projectFilePath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\LaptopGuard.Service.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vr740\\.nuget\\packages\\microsoft.data.sqlite\\10.0.9\\microsoft.data.sqlite.10.0.9.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\microsoft.data.sqlite.core\\10.0.9\\microsoft.data.sqlite.core.10.0.9.nupkg.sha512",
@@ -51,9 +51,9 @@
       "code": "NU1603",
       "level": "Warning",
       "message": "LaptopGuard.Service depends on SQLitePCLRaw.lib.e_sqlite3 (>= 2.1.12) but SQLitePCLRaw.lib.e_sqlite3 2.1.12 was not found. SQLitePCLRaw.lib.e_sqlite3 3.50.3 was resolved instead.",
-      "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
+      "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\LaptopGuard.Service.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
+      "filePath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\LaptopGuard.Service.csproj",
       "libraryId": "SQLitePCLRaw.lib.e_sqlite3",
       "targetGraphs": [
         "net10.0-windows"

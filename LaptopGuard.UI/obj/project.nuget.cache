@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "mSGdpIZO3SU=",
+  "dgSpecHash": "GWaZ2W7aUQQ=",
   "success": true,
-  "projectFilePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
+  "projectFilePath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.ui\\LaptopGuard.UI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vr740\\.nuget\\packages\\materialdesigncolors\\5.3.2\\materialdesigncolors.5.3.2.nupkg.sha512",
     "C:\\Users\\vr740\\.nuget\\packages\\materialdesignthemes\\5.3.2\\materialdesignthemes.5.3.2.nupkg.sha512",
@@ -22,9 +22,9 @@
       "code": "NU1603",
       "level": "Warning",
       "message": "LaptopGuard.Core depends on SQLitePCLRaw.lib.e_sqlite3 (>= 2.1.12) but SQLitePCLRaw.lib.e_sqlite3 2.1.12 was not found. SQLitePCLRaw.lib.e_sqlite3 3.50.3 was resolved instead.",
-      "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
+      "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.ui\\LaptopGuard.UI.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
+      "filePath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.ui\\LaptopGuard.UI.csproj",
       "libraryId": "SQLitePCLRaw.lib.e_sqlite3",
       "targetGraphs": [
         "net10.0-windows"

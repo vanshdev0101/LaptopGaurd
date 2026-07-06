@@ -2184,11 +2184,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
+      "projectUniqueName": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\LaptopGuard.Service.csproj",
       "projectName": "LaptopGuard.Service",
-      "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
+      "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\LaptopGuard.Service.csproj",
       "packagesPath": "C:\\Users\\vr740\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Service\\obj\\",
+      "outputPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2210,8 +2210,8 @@
           "framework": "net10.0-windows7.0",
           "targetAlias": "net10.0-windows",
           "projectReferences": {
-            "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Core\\LaptopGuard.Core.csproj": {
-              "projectPath": "C:\\Users\\vr740\\OneDrive\\Documents\\Projects\\LaptopGaurd\\LaptopGuard.Core\\LaptopGuard.Core.csproj"
+            "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.Core\\LaptopGuard.Core.csproj": {
+              "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.Core\\LaptopGuard.Core.csproj"
             }
           }
         }
