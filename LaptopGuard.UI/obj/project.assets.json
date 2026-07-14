@@ -1725,11 +1725,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.ui\\LaptopGuard.UI.csproj",
+      "projectUniqueName": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
       "projectName": "LaptopGuard.UI",
-      "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.ui\\LaptopGuard.UI.csproj",
+      "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.UI\\LaptopGuard.UI.csproj",
       "packagesPath": "C:\\Users\\vr740\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.ui\\obj\\",
+      "outputPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.UI\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

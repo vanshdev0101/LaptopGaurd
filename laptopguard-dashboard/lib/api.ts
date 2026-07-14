@@ -100,5 +100,7 @@ export async function verifyOtp(code: string): Promise<{ success: boolean; sessi
 }
 
 export function photoUrl(filename: string): string {
-    return `${BASE}/photo/${filename}`;
+    // API already returns paths like "/photo/filename.jpg"
+    // so just prepend BASE directly
+    return `${BASE}${filename}`;
 }

@@ -28,9 +28,7 @@ function formatTs(ts: string): string {
 }
 
 function isInsertEvent(eventType: string): boolean {
-    return eventType?.toLowerCase().includes('insert') ||
-        eventType?.toLowerCase().includes('connect') ||
-        eventType?.toLowerCase().includes('arrival');
+    return eventType === 'Inserted';
 }
 
 function EventTypeBadge({ type }: { type: string }) {
@@ -71,13 +69,25 @@ export default function UsbPage() {
     const [dateFilter, setDateFilter] = useState<Filter>('all');
     const [eventFilter, setEventFilter] = useState<EventFilter>('all');
     const [search, setSearch] = useState('');
+    const [lastRefresh, setLastRefresh] = useState('');
 
     useEffect(() => {
         if (!ready) return;
         if (!token) { window.location.href = '/login'; return; }
-        getUsbEvents(token)
-            .then(data => { setEvents(data); setLoading(false); })
-            .catch(e => { setError(e.message); setLoading(false); });
+
+        const load = () => {
+            getUsbEvents(token)
+                .then(data => {
+                    setEvents(data);
+                    setLoading(false);
+                    setLastRefresh(new Date().toLocaleTimeString());
+                })
+                .catch(e => { setError(e.message); setLoading(false); });
+        };
+
+        load();
+        const interval = setInterval(load, 30000);
+        return () => clearInterval(interval);
     }, [ready, token]);
 
     const filtered = filterByDate(events, dateFilter).filter(e => {
@@ -118,9 +128,14 @@ export default function UsbPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(167,139,250,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🔌</div>
                         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', margin: 0 }}>USB Activity</h1>
+                        {lastRefresh && (
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
+                                · Refreshed {lastRefresh}
+                            </span>
+                        )}
                     </div>
                     <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: 14, paddingLeft: 48 }}>
-                        All device connect and disconnect events logged on this machine.
+                        All device connect and disconnect events logged on this machine. Auto-refreshes every 30s.
                     </p>
                 </div>
 
@@ -191,7 +206,9 @@ export default function UsbPage() {
                                         onMouseLeave={el => (el.currentTarget.style.background = 'transparent')}>
                                         <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-secondary)', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{formatTs(e.timestamp)}</td>
                                         <td style={{ padding: '13px 16px' }}><EventTypeBadge type={e.eventType} /></td>
-                                        <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.deviceName || <span style={{ color: 'var(--text-muted)' }}>Unknown Device</span>}</td>
+                                        <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {e.deviceName || <span style={{ color: 'var(--text-muted)' }}>Unknown Device</span>}
+                                        </td>
                                         <td style={{ padding: '13px 16px', fontSize: 12, color: 'var(--text-secondary)' }}>{e.deviceType || '—'}</td>
                                         <td style={{ padding: '13px 16px', fontSize: 13, fontWeight: 600, color: 'var(--blue)', fontFamily: 'monospace' }}>{e.driveLetter ? `${e.driveLetter}:` : '—'}</td>
                                         <td style={{ padding: '13px 16px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{e.serialNumber || '—'}</td>

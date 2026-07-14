@@ -1,10 +1,31 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getIncidentById, getAppEventsByIncident, getUsbEvents, photoUrl, Incident, AppEvent, UsbEvent } from '@/lib/api';
 import DashboardShell from '@/components/layout/DashboardShell';
+
+interface IncidentDetail {
+    id: number;
+    timestamp: string;
+    username: string;
+    logonType: number;
+    failureReason: string;
+    photos: string[];
+    photoHashes: string[];
+    apps: AppEvent[];
+}
+
+interface AppEvent {
+    id: number;
+    appName: string;
+    executablePath: string;
+    publisher: string;
+    processId: number;
+    timestamp: string;
+}
+
+const BASE = 'http://100.92.192.6:5000';
 
 function decodeReason(raw: string): string {
     if (!raw) return '—';
@@ -12,217 +33,221 @@ function decodeReason(raw: string): string {
     catch { return raw; }
 }
 
-function formatTs(ts: string): string {
+function logonType(n: number): string {
+    return ({ 2: 'Interactive', 3: 'Network', 4: 'Batch', 5: 'Service', 7: 'Unlock', 10: 'Remote', 11: 'Cached' } as Record<number, string>)[n] ?? `Type ${n}`;
+}
+
+function fmt(ts: string) {
     const d = new Date(ts);
-    return d.toLocaleString('en-IN', {
-        day: '2-digit', month: 'short', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        hour12: false,
-    } as Intl.DateTimeFormatOptions);
-}
-
-function getAppIcon(name: string): string {
-    const n = name?.toLowerCase() || '';
-    if (n.includes('chrome')) return '🌐';
-    if (n.includes('firefox')) return '🦊';
-    if (n.includes('edge')) return '🌀';
-    if (n.includes('code') || n.includes('vscode')) return '💻';
-    if (n.includes('terminal') || n.includes('cmd') || n.includes('powershell')) return '⬛';
-    if (n.includes('notepad')) return '📝';
-    if (n.includes('explorer')) return '📁';
-    if (n.includes('discord') || n.includes('slack') || n.includes('teams')) return '💬';
-    return '⚙️';
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-    return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 140 }}>{label}</span>
-            <span style={{ fontSize: 13, color: 'var(--text)', flex: 1, wordBreak: 'break-all' }}>{value}</span>
-        </div>
-    );
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) +
+        ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 export default function IncidentDetailPage() {
     const { token, ready } = useAuth();
+    const router = useRouter();
     const params = useParams();
-    const id = Number(params.id);
+    const id = params?.id as string;
 
-    const [incident, setIncident] = useState<Incident | null>(null);
-    const [apps, setApps] = useState<AppEvent[]>([]);
-    const [usbNearby, setUsbNearby] = useState<UsbEvent[]>([]);
+    const [incident, setIncident] = useState<IncidentDetail | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
-    const [lightboxIdx, setLightboxIdx] = useState(0);
+    const [lightbox, setLightbox] = useState<string | null>(null);
 
     useEffect(() => {
         if (!ready) return;
         if (!token) { window.location.href = '/login'; return; }
-        Promise.all([
-            getIncidentById(id, token),
-            getAppEventsByIncident(id, token),
-            getUsbEvents(token),
-        ]).then(([inc, appData, usbData]) => {
-            setIncident(inc);
-            setApps(appData);
-            if (inc) {
-                const incTime = new Date(inc.timestamp).getTime();
-                setUsbNearby(usbData.filter(u => Math.abs(new Date(u.timestamp).getTime() - incTime) <= 5 * 60 * 1000));
-            }
-            setLoading(false);
-        }).catch(e => { setError(e.message); setLoading(false); });
+        fetch(`${BASE}/api/incidents/${id}?token=${token}`)
+            .then(r => r.json())
+            .then(async data => {
+                // Also fetch apps for this incident
+                const appsRes = await fetch(`${BASE}/api/apps/${id}?token=${token}`);
+                const apps = appsRes.ok ? await appsRes.json() : [];
+                setIncident({ ...data, apps });
+            })
+            .catch(() => router.push('/incidents'))
+            .finally(() => setLoading(false));
     }, [ready, token, id]);
 
-    const photos = incident?.photos || [];
-
-    useEffect(() => {
-        if (!lightboxPhoto) return;
-        const handler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setLightboxPhoto(null);
-            if (e.key === 'ArrowLeft') { const i = (lightboxIdx - 1 + photos.length) % photos.length; setLightboxPhoto(photos[i]); setLightboxIdx(i); }
-            if (e.key === 'ArrowRight') { const i = (lightboxIdx + 1) % photos.length; setLightboxPhoto(photos[i]); setLightboxIdx(i); }
-        };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
-    }, [lightboxPhoto, lightboxIdx, photos]);
-
-    if (loading) return <DashboardShell><div style={{ padding: 64, textAlign: 'center', color: 'var(--text-muted)' }}>⏳ Loading incident...</div></DashboardShell>;
-    if (error || !incident) return (
+    if (!ready || loading) return (
         <DashboardShell>
-            <div style={{ padding: 64, textAlign: 'center', color: 'var(--red)' }}>
-                ⚠️ {error || 'Incident not found'}
-                <div style={{ marginTop: 20 }}><a href="/incidents" style={{ color: 'var(--primary)', fontSize: 14, textDecoration: 'none' }}>← Back to Incidents</a></div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '20px', color: 'var(--primary)', animation: 'pulse 1.5s infinite' }}>⟳</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '11px', letterSpacing: '0.15em', marginTop: '8px' }}>LOADING</div>
+                </div>
             </div>
         </DashboardShell>
     );
 
+    if (!incident) return null;
+
     return (
         <DashboardShell>
-            <div style={{ padding: '32px 36px', minHeight: '100vh' }}>
-
-                {/* Breadcrumb */}
-                <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <a href="/incidents" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>Incidents</a>
-                    <span style={{ color: 'var(--text-muted)' }}>›</span>
-                    <span style={{ color: 'var(--text)', fontSize: 13, fontWeight: 500 }}>Incident #{incident.id}</span>
-                </div>
+            <div className="fade-up">
 
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 32 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(252,165,165,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🚨</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    <button
+                        onClick={() => router.push('/incidents')}
+                        style={{
+                            background: 'var(--bg-hover)', border: '1px solid var(--border)',
+                            borderRadius: '8px', padding: '6px 14px', cursor: 'pointer',
+                            fontSize: '12px', color: 'var(--text-secondary)',
+                            transition: 'border-color 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
+                    >
+                        ← Back
+                    </button>
                     <div>
-                        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', margin: '0 0 4px' }}>Failed Login — Incident #{incident.id}</h1>
-                        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                            {formatTs(incident.timestamp)} · User: <span style={{ color: 'var(--red)', fontFamily: 'monospace' }}>{incident.username}</span>
-                        </div>
+                        <h1 className="title">Incident #{incident.id}</h1>
+                        <p className="subtitle" style={{ marginTop: '4px' }}>{fmt(incident.timestamp)}</p>
                     </div>
-                    <span style={{ marginLeft: 'auto', padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: 'rgba(252,165,165,0.1)', color: 'var(--red)', border: '1px solid rgba(252,165,165,0.2)' }}>
-                        FAILED LOGIN
-                    </span>
+                    <div style={{
+                        marginLeft: 'auto', padding: '5px 12px', borderRadius: '8px',
+                        background: 'var(--red-dim)', border: '1px solid rgba(252,165,165,0.2)',
+                        fontSize: '9px', color: 'var(--red)', fontWeight: 700, letterSpacing: '0.12em',
+                    }}>
+                        ● SECURITY EVENT
+                    </div>
                 </div>
 
-                {/* Info + USB grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 24px' }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Event Details</div>
-                        <InfoRow label="Timestamp" value={formatTs(incident.timestamp)} />
-                        <InfoRow label="Username" value={incident.username} />
-                        <InfoRow label="Logon Type" value={String(incident.logonType)} />
-                        <InfoRow label="Failure Reason" value={decodeReason(incident.failureReason)} />
-                        <InfoRow label="Photos Taken" value={String(photos.length)} />
-                    </div>
-
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 24px' }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--yellow)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>USB Events ±5 min</div>
-                        {usbNearby.length === 0 ? (
-                            <div style={{ color: 'var(--text-muted)', fontSize: 13, padding: '20px 0' }}>No USB activity near this incident.</div>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                {usbNearby.map(u => {
-                                    const ins = u.eventType?.toLowerCase().includes('insert') || u.eventType?.toLowerCase().includes('connect');
-                                    return (
-                                        <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 8, background: ins ? 'rgba(134,239,172,0.05)' : 'rgba(252,165,165,0.05)', border: `1px solid ${ins ? 'rgba(134,239,172,0.15)' : 'rgba(252,165,165,0.15)'}` }}>
-                                            <span style={{ fontSize: 16 }}>🔌</span>
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{u.deviceName || 'Unknown Device'}</div>
-                                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatTs(u.timestamp)}</div>
-                                            </div>
-                                            <span style={{ fontSize: 11, fontWeight: 600, color: ins ? 'var(--green)' : 'var(--red)' }}>{ins ? '↑ IN' : '↓ OUT'}</span>
-                                        </div>
-                                    );
-                                })}
+                {/* Info grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                    {[
+                        { label: 'USERNAME', value: incident.username },
+                        { label: 'LOGON TYPE', value: logonType(incident.logonType) },
+                        { label: 'FAILURE REASON', value: decodeReason(incident.failureReason) },
+                    ].map(f => (
+                        <div key={f.label} className="glass card-padding">
+                            <div style={{ fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '0.15em', fontWeight: 700, marginBottom: '8px' }}>
+                                {f.label}
                             </div>
-                        )}
-                    </div>
+                            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{f.value || '—'}</div>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Photos */}
-                {photos.length > 0 && (
-                    <div style={{ marginTop: 20, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 24px' }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--red)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.06em' }}>📸 Photo Evidence ({photos.length})</div>
-                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                            {photos.map((f, idx) => (
-                                <div key={f} onClick={() => { setLightboxPhoto(f); setLightboxIdx(idx); }}
-                                    style={{ width: 160, height: 120, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', border: '1px solid var(--border)', transition: 'transform 0.15s', flexShrink: 0 }}
-                                    onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.04)'}
-                                    onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)'}>
-                                    <img src={photoUrl(f)} alt={`Evidence ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div className="glass" style={{ overflow: 'hidden', marginBottom: '16px' }}>
+                    <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '2px', height: '14px', background: 'var(--blue)', borderRadius: '2px' }} />
+                        <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--text-secondary)' }}>
+                            PHOTO EVIDENCE
+                        </span>
+                        <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-muted)' }}>
+                            {incident.photos.length} captured
+                        </span>
+                    </div>
+                    {incident.photos.length === 0 ? (
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                            No photos captured
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', gap: '12px', padding: '16px', overflowX: 'auto' }}>
+                            {incident.photos.map((p, idx) => (
+                                <div
+                                    key={idx}
+                                    onClick={() => setLightbox(`${BASE}${p}`)}
+                                    style={{
+                                        flexShrink: 0, cursor: 'pointer',
+                                        borderRadius: '10px', overflow: 'hidden',
+                                        border: '1px solid var(--border)',
+                                        transition: 'border-color 0.15s',
+                                    }}
+                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)'}
+                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
+                                >
+                                    <img
+                                        src={`${BASE}${p}`}
+                                        alt={`Evidence ${idx + 1}`}
+                                        style={{ height: '160px', width: 'auto', display: 'block' }}
+                                    />
                                 </div>
                             ))}
                         </div>
-                    </div>
-                )}
+                    )}
+                    {/* Hashes */}
+                    {incident.photoHashes && incident.photoHashes.length > 0 && (
+                        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
+                            {incident.photoHashes.map((h, idx) => (
+                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>SHA-256 [{idx + 1}]</span>
+                                    <span style={{ fontFamily: 'monospace', fontSize: '10px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 {/* Apps */}
-                {apps.length > 0 && (
-                    <div style={{ marginTop: 20, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 600, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                            ⚙️ Running Applications ({apps.length})
+                <div className="glass" style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '2px', height: '14px', background: 'var(--primary)', borderRadius: '2px' }} />
+                        <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--text-secondary)' }}>
+                            RUNNING APPLICATIONS AT TIME OF INCIDENT
+                        </span>
+                        <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-muted)' }}>
+                            {incident.apps.length} captured
+                        </span>
+                    </div>
+                    {incident.apps.length === 0 ? (
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                            No applications captured — this incident may predate app monitoring
                         </div>
+                    ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                                    {['Application', 'Executable Path', 'Publisher', 'PID'].map(h => (
-                                        <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'rgba(255,255,255,0.01)' }}>{h}</th>
+                                    {['APPLICATION', 'EXECUTABLE', 'PUBLISHER', 'PID'].map(h => (
+                                        <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: '9px', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.12em' }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {apps.map((a, i) => (
-                                    <tr key={a.id} style={{ borderBottom: i < apps.length - 1 ? '1px solid var(--border)' : 'none' }}
-                                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                        <td style={{ padding: '11px 20px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontSize: 16 }}>{getAppIcon(a.appName)}</span>
-                                                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{a.appName}</span>
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '11px 20px', fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.executablePath || '—'}</td>
-                                        <td style={{ padding: '11px 20px', fontSize: 12, color: 'var(--text-secondary)' }}>{a.publisher || '—'}</td>
-                                        <td style={{ padding: '11px 20px', fontSize: 12, color: 'var(--blue)', fontFamily: 'monospace' }}>{a.processId}</td>
+                                {incident.apps.map(a => (
+                                    <tr key={a.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                        <td style={{ padding: '11px 16px', fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>{a.appName}</td>
+                                        <td style={{ padding: '11px 16px', fontFamily: 'monospace', fontSize: '10px', color: 'var(--text-muted)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.executablePath || '—'}</td>
+                                        <td style={{ padding: '11px 16px', fontSize: '11px', color: 'var(--text-muted)' }}>{a.publisher || '—'}</td>
+                                        <td style={{ padding: '11px 16px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-muted)' }}>{a.processId}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                    </div>
-                )}
-
-                {/* Lightbox */}
-                {lightboxPhoto && (
-                    <div onClick={() => setLightboxPhoto(null)} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <button onClick={() => setLightboxPhoto(null)} style={{ position: 'absolute', top: 20, right: 24, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontSize: 14, padding: '6px 14px', cursor: 'pointer' }}>✕ Close</button>
-                        {photos.length > 1 && <button onClick={e => { e.stopPropagation(); const i = (lightboxIdx - 1 + photos.length) % photos.length; setLightboxPhoto(photos[i]); setLightboxIdx(i); }} style={{ position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontSize: 20, padding: '12px 16px', cursor: 'pointer' }}>‹</button>}
-                        <div onClick={e => e.stopPropagation()}>
-                            <img src={photoUrl(lightboxPhoto)} alt="Evidence" style={{ maxWidth: '80vw', maxHeight: '75vh', objectFit: 'contain', borderRadius: 10, display: 'block' }} />
-                            <div style={{ marginTop: 10, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{lightboxIdx + 1} of {photos.length} · Esc to close</div>
-                        </div>
-                        {photos.length > 1 && <button onClick={e => { e.stopPropagation(); const i = (lightboxIdx + 1) % photos.length; setLightboxPhoto(photos[i]); setLightboxIdx(i); }} style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontSize: 20, padding: '12px 16px', cursor: 'pointer' }}>›</button>}
-                    </div>
-                )}
+                    )}
+                </div>
 
             </div>
+
+            {/* Lightbox */}
+            {lightbox && (
+                <div
+                    onClick={() => setLightbox(null)}
+                    style={{
+                        position: 'fixed', inset: 0,
+                        background: 'rgba(0,0,0,0.85)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 999,
+                    }}
+                >
+                    <button
+                        onClick={() => setLightbox(null)}
+                        style={{
+                            position: 'absolute', top: '20px', right: '24px',
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            fontSize: '28px', color: 'var(--text-muted)',
+                        }}
+                    >✕</button>
+                    <img
+                        src={lightbox}
+                        alt="Evidence"
+                        style={{ maxWidth: '90vw', maxHeight: '85vh', borderRadius: '10px' }}
+                        onClick={e => e.stopPropagation()}
+                    />
+                </div>
+            )}
         </DashboardShell>
     );
 }

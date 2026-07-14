@@ -2184,11 +2184,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\LaptopGuard.Service.csproj",
+      "projectUniqueName": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
       "projectName": "LaptopGuard.Service",
-      "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\LaptopGuard.Service.csproj",
+      "projectPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.Service\\LaptopGuard.Service.csproj",
       "packagesPath": "C:\\Users\\vr740\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\laptopguard.service\\obj\\",
+      "outputPath": "C:\\Users\\vr740\\onedrive\\documents\\projects\\laptopgaurd\\LaptopGuard.Service\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -10,16 +10,30 @@ public class EventMonitor
 
     public void Start()
     {
-        var query = new EventLogQuery(
-            "Security",
-            PathType.LogName,
-            "*[System/EventID=4625]");
+        try
+        {
+            Console.WriteLine("[*] Attempting to start EventLogWatcher...");
 
-        _watcher = new EventLogWatcher(query);
+            var query = new EventLogQuery(
+                "Security",
+                PathType.LogName,
+                "*[System/EventID=4625]");
 
-        _watcher.EventRecordWritten += OnEventRecordWritten;
+            Console.WriteLine("[*] Query created.");
 
-        _watcher.Enabled = true;
+            _watcher = new EventLogWatcher(query);
+
+            Console.WriteLine("[*] Watcher created.");
+
+            _watcher.EventRecordWritten += OnEventRecordWritten;
+            _watcher.Enabled = true;
+
+            Console.WriteLine("[*] EventLogWatcher started successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[!] EventLogWatcher FAILED: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     public void Stop()
@@ -38,7 +52,6 @@ public class EventMonitor
         if (e.EventRecord is null)
             return;
 
-        FailedLogonDetected?.Invoke(
-            e.EventRecord);
+        FailedLogonDetected?.Invoke(e.EventRecord);
     }
 }

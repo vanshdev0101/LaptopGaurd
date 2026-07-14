@@ -48,27 +48,37 @@ public class Worker : BackgroundService
 
             _logger.LogWarning("[!] Failed login detected at {Time}", DateTime.Now);
 
-            var photos = _camera.CapturePhotos(3);
-            if (photos.Count == 0)
-            {
-                _logger.LogWarning("[!] No photos captured.");
-                return;
-            }
-
-            var key = SecurityHelper.LoadOrCreateKey(_keyPath);
             var paths = new List<string>();
             var hashes = new List<string>();
 
-            foreach (var photo in photos)
+            // Try to capture photos but don't abort if it fails
+            try
             {
-                var hash = SecurityHelper.HashFile(photo);
-                var encrypted = SecurityHelper.EncryptFile(photo, key);
-                File.WriteAllBytes(photo.Replace(".jpg", ".enc"), encrypted);
-                paths.Add(photo);
-                hashes.Add(hash);
-                _logger.LogInformation("[+] Photo captured: {Photo}", photo);
+                var photos = _camera.CapturePhotos(3);
+                if (photos.Count > 0)
+                {
+                    var key = SecurityHelper.LoadOrCreateKey(_keyPath);
+                    foreach (var photo in photos)
+                    {
+                        var hash = SecurityHelper.HashFile(photo);
+                        var encrypted = SecurityHelper.EncryptFile(photo, key);
+                        File.WriteAllBytes(photo.Replace(".jpg", ".enc"), encrypted);
+                        paths.Add(photo);
+                        hashes.Add(hash);
+                        _logger.LogInformation("[+] Photo captured: {Photo}", photo);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("[!] No photos captured — webcam may be unavailable.");
+                }
+            }
+            catch (Exception camEx)
+            {
+                _logger.LogWarning(camEx, "[!] Camera capture failed — saving incident without photos.");
             }
 
+            // Save incident regardless of whether photos were captured
             var incident = new Incident
             {
                 Timestamp = DateTime.Now,
@@ -83,9 +93,8 @@ public class Worker : BackgroundService
 
             _db.SaveIncident(incident);
             _logger.LogInformation("[+] Incident #{Id} saved with {Count} photos.",
-                                   incident.Id, photos.Count);
+                                   incident.Id, paths.Count);
 
-            // NOW capture running apps — incident exists and has a valid Id
             var runningApps = AppMonitor.GetRunningApps(incident.Id);
             _db.SaveAppEvents(runningApps);
             _logger.LogInformation("[+] Captured {Count} running apps.", runningApps.Count);
@@ -95,7 +104,6 @@ public class Worker : BackgroundService
             _logger.LogError(ex, "[-] Error handling failed logon event.");
         }
     }
-
     private static string GetUsername(EventRecord record)
     {
         try

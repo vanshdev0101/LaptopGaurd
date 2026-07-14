@@ -73,15 +73,7 @@ export default function GalleryPage() {
                     </p>
                 </div>
 
-                {/* Stats bar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 24, padding: '14px 20px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
-                    <div>
-                        <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--red)' }}>{photos.length}</span>
-                        <span style={{ fontSize: 13, color: 'var(--text-secondary)', marginLeft: 8 }}>total photos</span>
-                    </div>
-                    <div style={{ width: 1, height: 24, background: 'var(--border)' }} />
-                    <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Click to open · ← → to navigate · Esc to close</div>
-                </div>
+               
 
                 {/* Grid */}
                 {loading ? (

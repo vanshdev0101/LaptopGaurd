@@ -14,4 +14,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(await response.json(), {
         status: response.status,
     });
-}
+} 
