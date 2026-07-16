@@ -9,8 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-
 <style>
   :root{
     --bg: #0A0C10;
@@ -227,9 +225,559 @@
     color: var(--muted);
     opacity: 0.5;
   }
+
+  .log-line{
+    display: flex;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(4px);
+    padding: 3px 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .log-line .ts{
+    color: var(--amber-dim);
+    flex-shrink: 0;
+  }
+  .log-line .msg{ color: var(--muted); }
+  .log-line.tone-boot .msg{ color: var(--muted); }
+  .log-line.tone-arm .msg{ color: var(--cyan); }
+  .log-line.tone-incident .ts{ color: var(--red); }
+  .log-line.tone-incident .msg{ color: var(--red); font-weight: 500; }
+  .log-line.tone-capture .msg{ color: var(--amber); }
+  .log-line.tone-idle .msg{ color: var(--muted); font-style: italic; }
+
+  .terminal-body{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .rec-flash{
+    background: var(--red) !important;
+    box-shadow: 0 0 10px var(--red);
+  }
+
+  /* ---------- shared section scaffolding ---------- */
+  section{ padding: 100px 0; }
+  .section-head{ max-width: 640px; }
+  .section-head h2{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.15;
+    margin-top: 14px;
+  }
+  .section-head p{
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 560px;
+  }
+
+  /* ---------- pipeline ---------- */
+  .pipeline{
+    border-top: 1px solid var(--border);
+  }
+  .pipeline-grid{
+    position: relative;
+    margin-top: 64px;
+    display: flex;
+    flex-direction: column;
+  }
+  .pipeline-svg{
+    position: absolute;
+    top: 0;
+    left: 51px;
+    width: 2px;
+    height: 100%;
+    overflow: visible;
+  }
+  .pipeline-svg path{
+    stroke: var(--amber);
+    stroke-width: 2;
+    fill: none;
+  }
+  .pipeline-svg .track{
+    stroke: var(--border);
+  }
+
+  .stage{
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    column-gap: 18px;
+    padding: 18px 18px 18px 16px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.008) 55%, rgba(255,255,255,0.016) 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      inset 0 0 0 1px rgba(255,176,32,0.03),
+      0 18px 34px -26px rgba(0,0,0,0.65);
+    transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+  }
+  .stage:last-child{ margin-bottom: 0; }
+  .stage::before{
+    /* glossy sheen, like light hitting curved glass */
+    content: "";
+    position: absolute;
+    top: -60%;
+    left: -15%;
+    width: 65%;
+    height: 140%;
+    background: linear-gradient(115deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 40%, transparent 70%);
+    transform: rotate(-6deg);
+    pointer-events: none;
+  }
+  .stage:hover{
+    border-color: rgba(255,176,32,0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 0 0 1px rgba(255,176,32,0.07),
+      0 20px 38px -24px rgba(0,0,0,0.7),
+      0 0 26px -14px rgba(255,176,32,0.2);
+    transform: translateY(-2px);
+  }
+
+  .stage-marker{
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+  .stage-dot{
+    width: 12px; height: 12px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--amber);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+
+  .stage-body{
+    position: relative;
+    z-index: 1;
+  }
+  .stage-num{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--amber);
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .stage-title{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .stage-body p{
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 620px;
+  }
+  .stage-body code{
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--cyan);
+    background: rgba(63,208,201,0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ---------- dashboard mockup ---------- */
+  .dash-note{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    border-radius: 4px;
+    background: var(--panel);
+  }
+  .dash-note .amber-dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--amber); flex-shrink: 0;
+  }
+
+  .mockup{
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel);
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,0.6);
+  }
+  .mockup-titlebar{
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-alt);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .mockup-titlebar .dots{ display:flex; gap:6px; }
+  .mockup-titlebar .dots span{ width:8px; height:8px; border-radius:50%; background: var(--border); }
+
+  .mockup-sidebar{
+    border-right: 1px solid var(--border);
+    padding: 14px 0;
+    position: relative;
+  }
+  .mockup-nav{ list-style: none; position: relative; }
+  .mockup-nav li{
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    color: var(--muted);
+    padding: 11px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color .2s ease, background-color .2s ease;
+    position: relative;
+    z-index: 1;
+    user-select: none;
+  }
+  .mockup-nav li:hover{ color: var(--text); background: rgba(255,255,255,0.03); }
+  .mockup-nav li:focus-visible{
+    outline: 2px solid var(--amber);
+    outline-offset: -2px;
+  }
+  .mockup-nav li .glyph{
+    width: 6px; height: 6px;
+    border-radius: 1px;
+    background: currentColor;
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+  .mockup-nav li.active{ color: var(--amber); }
+  .mockup-nav li.active .glyph{ opacity: 1; box-shadow: 0 0 6px var(--amber); }
+
+  .nav-indicator{
+    position: absolute;
+    left: 0; top: 0;
+    width: 3px;
+    height: 39px;
+    background: var(--amber);
+    box-shadow: 0 0 8px var(--amber);
+  }
+
+  .mockup-content{
+    padding: 26px 28px;
+    min-height: 320px;
+  }
+  .mock-eyebrow{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: 0.1em;
+    margin-bottom: 18px;
+  }
+
+  /* metric cards */
+  .mock-metrics{ display: flex; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+  .mock-metric{
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    min-width: 120px;
+    background: var(--panel-alt);
+  }
+  .mock-metric .num{
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+  }
+  .mock-metric .lbl{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  /* bar chart */
+  .mock-chart{
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 90px;
+    padding: 0 2px;
+  }
+  .mock-chart .bar{
+    flex: 1;
+    background: linear-gradient(to top, var(--amber-dim), var(--amber));
+    border-radius: 2px 2px 0 0;
+    opacity: 0.85;
+  }
+
+  /* table */
+  .mock-table{ width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; }
+  .mock-table th{
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10.5px;
+  }
+  .mock-table td{
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .mock-table tr:last-child td{ border-bottom: none; }
+  .tag{
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+  }
+  .tag.cyan{ background: rgba(63,208,201,0.12); color: var(--cyan); }
+  .tag.red{ background: rgba(255,92,92,0.12); color: var(--red); }
+  .tag.muted{ background: rgba(124,135,148,0.12); color: var(--muted); }
+
+  /* photo grid */
+  .mock-gallery{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .mock-photo{
+    aspect-ratio: 4/3;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background:
+      repeating-linear-gradient(135deg, rgba(255,176,32,0.06) 0 8px, transparent 8px 16px),
+      var(--panel-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* key-value */
+  .mock-kv{ display: flex; flex-direction: column; gap: 0; }
+  .mock-kv .row{
+    display: flex;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  .mock-kv .row:last-child{ border-bottom: none; }
+  .mock-kv .k{ color: var(--muted); }
+  .mock-kv .v{ color: var(--text); }
+
+  @media (max-width: 720px){
+    .mockup{ grid-template-columns: 1fr; }
+    .mockup-sidebar{ border-right: none; border-bottom: 1px solid var(--border); }
+    .mockup-nav{ display: flex; flex-wrap: wrap; }
+    .nav-indicator{ display: none; }
+    .mock-gallery{ grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---------- security badges ---------- */
+  .security{ border-top: 1px solid var(--border); }
+  .badge-row{
+    margin-top: 44px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+  }
+  .badge{
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    background: var(--panel);
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .badge .badge-tag{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .badge .badge-tag::before{
+    content: "";
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    border-radius: 1px;
+    display: inline-block;
+  }
+  .badge h4{
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .badge p{
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+
+  /* ---------- tech stack table ---------- */
+  .stack{ border-top: 1px solid var(--border); }
+  .stack-table{
+    margin-top: 44px;
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+  }
+  .stack-table tr{ opacity: 0; transform: translateX(-8px); }
+  .stack-table th{
+    text-align: left;
+    padding: 10px 4px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+  }
+  .stack-table td{
+    padding: 16px 4px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .stack-table td:first-child{
+    color: var(--amber);
+    width: 160px;
+    white-space: nowrap;
+  }
+  .stack-table td:last-child{ color: var(--text); line-height: 1.7; }
+  .stack-table tr:last-child td{ border-bottom: none; }
+  .stack-table tr{ transition: background-color .25s ease; }
+  .stack-table tr:hover{ background: rgba(255,176,32,0.04); }
+  .stack-table tr:hover td:first-child{ text-shadow: 0 0 10px rgba(255,176,32,0.5); }
+
+  /* ---------- cursor glow ---------- */
+  #cursorGlow{
+    position: fixed;
+    top: 0; left: 0;
+    width: 480px; height: 480px;
+    margin-left: -240px; margin-top: -240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,176,32,0.06) 0%, rgba(63,208,201,0.03) 45%, transparent 72%);
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: screen;
+    will-change: transform;
+  }
+
+  /* ---------- animated eyebrow underline ---------- */
+  .eyebrow{ position: relative; }
+  .eyebrow::before{
+    content: "";
+    width: 22px; height: 1px;
+    background: var(--amber);
+    display: inline-block;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .eyebrow.in-view::before{
+    animation: eyebrowGrow 0.6s ease forwards;
+  }
+  @keyframes eyebrowGrow{ to{ transform: scaleX(1); } }
+
+  /* ---------- badge tilt + glow ---------- */
+  .badge{
+    transition: border-color .25s ease, box-shadow .25s ease;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .badge:hover{
+    border-color: var(--amber-dim);
+    box-shadow: 0 14px 40px -20px rgba(255,176,32,0.35);
+  }
+  .badge:hover .badge-tag{ color: var(--amber); }
+  .badge:hover .badge-tag::before{ background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+  /* ---------- chart bars start collapsed, JS grows them ---------- */
+  .mock-chart .bar{ transform: scaleY(0); transform-origin: bottom; }
+
+  /* ---------- generic scroll-reveal (JS animates these in on enter) ---------- */
+  [data-reveal]{ opacity: 0; }
+
+.stage.active-stage{
+  border-color:rgba(255,176,32,.55)!important;
+  box-shadow:
+    0 0 0 1px rgba(255,176,32,.25),
+    0 0 30px rgba(255,176,32,.18),
+    0 18px 38px rgba(0,0,0,.45);
+}
+.stage.active-stage .stage-dot{
+  animation:stageDotPulse .45s ease;
+  box-shadow:
+    0 0 0 4px var(--bg),
+    0 0 18px var(--amber),
+    0 0 30px rgba(255,176,32,.5);
+}
+@keyframes stageDotPulse{
+  0%{transform:scale(.85);}
+  45%{transform:scale(1.35);}
+  100%{transform:scale(1);}
+}
+
+
+.stage{
+  transform-style:preserve-3d;
+  perspective:1200px;
+  will-change:transform,filter,opacity;
+}
+.stage.shine::before{
+  animation:stageShine .9s ease forwards;
+}
+@keyframes stageShine{
+  from{left:-130%;}
+  to{left:180%;}
+}
+
+
+#bgGrid{
+position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.16;
+background:
+linear-gradient(rgba(255,176,32,.06) 1px,transparent 1px),
+linear-gradient(90deg,rgba(255,176,32,.06) 1px,transparent 1px);
+background-size:48px 48px;
+mask-image:radial-gradient(circle at center,black 40%,transparent 100%);
+}
+.gridPulse{
+position:absolute;width:8px;height:8px;border-radius:50%;
+background:var(--amber);filter:blur(1px);
+box-shadow:0 0 18px var(--amber);
+}
+
 </style>
 </head>
 <body>
+
+  <div id="bgGrid"></div>
+  <div id="cursorGlow"></div>
 
   <div class="osd-strip">
     <div class="osd-left">
@@ -264,15 +812,179 @@
             <span>LaptopGuard.Service — incident_feed.log</span>
             <div class="terminal-dots"><span></span><span></span><span></span></div>
           </div>
-          <div class="terminal-body">
-            <span class="placeholder">// boot sequence + live incident animation goes here (stage 2)</span>
+          <div class="terminal-body" id="termBody">
+            <div class="log-line tone-boot"><span class="ts">[09:14:02]</span><span class="msg">SERVICE STARTED — LaptopGuard.Service v1.0</span></div>
+            <div class="log-line tone-boot"><span class="ts">[09:14:02]</span><span class="msg">WATCHING: Security Log → Event ID 4625</span></div>
+            <div class="log-line tone-arm"><span class="ts">[09:14:03]</span><span class="msg">WMI LISTENER ARMED — Win32_PnPEntity</span></div>
+            <div class="log-line tone-boot"><span class="ts">[09:14:03]</span><span class="msg">DATABASE READY — laptopguard.db</span></div>
+            <div class="log-line tone-idle"><span class="ts">[09:14:04]</span><span class="msg">…standing by</span></div>
+            <div class="log-line tone-incident"><span class="ts">[09:14:41]</span><span class="msg">FAILED LOGIN DETECTED — user: "admin"</span></div>
+            <div class="log-line tone-capture"><span class="ts">[09:14:41]</span><span class="msg">CAPTURING WEBCAM… done (evidence_0417.jpg)</span></div>
+            <div class="log-line tone-boot"><span class="ts">[09:14:41]</span><span class="msg">SNAPSHOT: 47 processes running</span></div>
+            <div class="log-line tone-capture"><span class="ts">[09:14:42]</span><span class="msg">INCIDENT #0418 LOGGED</span></div>
+            <div class="log-line tone-idle"><span class="ts">[09:14:42]</span><span class="msg">DASHBOARD UPDATED — awaiting review</span></div>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <script>
+  <section class="pipeline" id="how-it-works">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">HOW IT WORKS</div>
+        <h2 data-reveal="up">One failed login triggers a five-step chain.</h2>
+        <p data-reveal="up">Every incident moves through the same pipeline, start to finish, in under a second.</p>
+      </div>
+
+      <div class="pipeline-grid" id="pipelineGrid">
+        <svg class="pipeline-svg" id="pipelineSvg" preserveAspectRatio="none">
+          <line class="track" x1="1" y1="0" x2="1" y2="100%"></line>
+          <line class="draw" x1="1" y1="0" x2="1" y2="100%"></line>
+        </svg>
+
+        <div class="stage" data-reveal="notify">
+          <div class="stage-marker"><div class="stage-dot"></div></div>
+          <div class="stage-body">
+            <span class="stage-num">01 — DETECT</span>
+            <div class="stage-title">A failed sign-in hits the Windows Security Log</div>
+            <p><code>EventMonitor.cs</code> polls for Event ID 4625 — the code Windows logs the moment a sign-in fails, whether it's a typo or someone who shouldn't be there.</p>
+          </div>
+        </div>
+
+        <div class="stage" data-reveal="notify">
+          <div class="stage-marker"><div class="stage-dot"></div></div>
+          <div class="stage-body">
+            <span class="stage-num">02 — CAPTURE</span>
+            <div class="stage-title">The webcam, the USB ports, and every running process, all at once</div>
+            <p><code>CameraCapture.cs</code> fires the webcam immediately. <code>UsbMonitor.cs</code> checks for devices connected in the last few seconds. <code>AppMonitor.cs</code> snapshots every running process.</p>
+          </div>
+        </div>
+
+        <div class="stage" data-reveal="notify">
+          <div class="stage-marker"><div class="stage-dot"></div></div>
+          <div class="stage-body">
+            <span class="stage-num">03 — CORRELATE</span>
+            <div class="stage-title">Everything gets stitched into one incident</div>
+            <p>The service ties the photo, the process list, and any nearby USB activity together into a single record — no separate logs to cross-reference later.</p>
+          </div>
+        </div>
+
+        <div class="stage" data-reveal="notify">
+          <div class="stage-marker"><div class="stage-dot"></div></div>
+          <div class="stage-body">
+            <span class="stage-num">04 — STORE</span>
+            <div class="stage-title">Written to disk, photos encrypted</div>
+            <p><code>Database.cs</code> writes the incident to a local SQLite file. Evidence photos are encrypted at rest with AES-256.</p>
+          </div>
+        </div>
+
+        <div class="stage" data-reveal="notify">
+          <div class="stage-marker"><div class="stage-dot"></div></div>
+          <div class="stage-body">
+            <span class="stage-num">05 — SURFACE</span>
+            <div class="stage-title">Live on the dashboard, wherever you are</div>
+            <p><code>LaptopGuard.Web</code> exposes it through a TOTP-protected API. The dashboard renders it live — reachable only over your private Tailscale network, never the public internet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard-preview" id="dashboard">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">INSIDE THE DASHBOARD</div>
+        <h2 data-reveal="up">Eight pages, one live feed.</h2>
+        <p data-reveal="up">The real dashboard runs on Next.js and only exists over Tailscale — there's nothing public to screenshot yet, so here's a faithful rebuild of what it looks like in use.</p>
+      </div>
+      <div class="dash-note"><span class="amber-dot"></span>Mockup — built to match the real UI, not a live screenshot</div>
+
+      <div class="mockup" data-reveal="up">
+        <div class="mockup-titlebar">
+          <span>laptopguard-dashboard — localhost:3001</span>
+          <div class="dots"><span></span><span></span><span></span></div>
+        </div>
+
+        <div class="mockup-sidebar">
+          <ul class="mockup-nav" id="mockNav">
+            <div class="nav-indicator" id="navIndicator"></div>
+            <li class="active" data-i="0" tabindex="0" role="button" aria-label="Show Overview"><span class="glyph"></span>Overview</li>
+            <li data-i="1" tabindex="0" role="button" aria-label="Show Incidents"><span class="glyph"></span>Incidents</li>
+            <li data-i="2" tabindex="0" role="button" aria-label="Show USB Activity"><span class="glyph"></span>USB Activity</li>
+            <li data-i="3" tabindex="0" role="button" aria-label="Show Applications"><span class="glyph"></span>Applications</li>
+            <li data-i="4" tabindex="0" role="button" aria-label="Show Gallery"><span class="glyph"></span>Gallery</li>
+            <li data-i="5" tabindex="0" role="button" aria-label="Show Analytics"><span class="glyph"></span>Analytics</li>
+            <li data-i="6" tabindex="0" role="button" aria-label="Show Settings"><span class="glyph"></span>Settings</li>
+          </ul>
+        </div>
+
+        <div class="mockup-content" id="mockContent">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="security" id="security">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">SECURITY MODEL</div>
+        <h2 data-reveal="up">The dashboard is only as safe as its own access.</h2>
+        <p data-reveal="up">Watching for intruders means the watcher itself can't be the weak point.</p>
+      </div>
+
+      <div class="badge-row" id="badgeRow">
+        <div class="badge">
+          <div class="badge-tag">AUTH</div>
+          <h4>TOTP sign-in</h4>
+          <p>Compatible with Google Authenticator and Authy — the same 6-digit code standard, no separate app to install.</p>
+        </div>
+        <div class="badge">
+          <div class="badge-tag">SESSIONS</div>
+          <h4>8-hour tokens, in memory</h4>
+          <p>Session tokens live in the backend's memory only. Restart the service and every session ends.</p>
+        </div>
+        <div class="badge">
+          <div class="badge-tag">NETWORK</div>
+          <h4>Tailscale-only exposure</h4>
+          <p>The API is never reachable from the public internet — only from devices on your private Tailscale network.</p>
+        </div>
+        <div class="badge">
+          <div class="badge-tag">STORAGE</div>
+          <h4>AES-256 photo encryption</h4>
+          <p>Evidence photos are encrypted at rest, so the image files themselves are useless without the key.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stack" id="stack">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">UNDER THE HOOD</div>
+        <h2 data-reveal="up">Built with a small, deliberate stack.</h2>
+        <p data-reveal="up">No framework was reached for out of habit — each piece was picked for what this project needed to learn.</p>
+      </div>
+
+      <table class="stack-table" id="stackTable">
+        <tr><th>LAYER</th><th>TECHNOLOGY</th></tr>
+        <tr><td>Frontend</td><td>Next.js 16, React 19, TypeScript, Tailwind CSS v4, Recharts</td></tr>
+        <tr><td>Backend</td><td>ASP.NET Minimal API, .NET 10, C#</td></tr>
+        <tr><td>Database</td><td>SQLite via Microsoft.Data.Sqlite</td></tr>
+        <tr><td>Auth</td><td>TOTP via Otp.NET (Google Authenticator compatible)</td></tr>
+        <tr><td>Monitoring</td><td>WMI (Win32_PnPEntity), Windows Event Log, System.Diagnostics</td></tr>
+        <tr><td>Network</td><td>Tailscale — private overlay network, no public internet exposure</td></tr>
+        <tr><td>Photos</td><td>AES-256 encrypted at rest</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <script type="module">
+    import { animate, createTimeline, svg, onScroll } from 'https://esm.sh/animejs';
+    // stash for later stages of this page to reuse without re-importing
+    window.__anime = { animate, createTimeline, svg, onScroll };
+
     // live clock in the OSD strip
     function tick(){
       const el = document.getElementById('osdClock');
@@ -283,17 +995,570 @@
     tick();
     setInterval(tick, 1000);
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // cursor-reactive ambient glow, smoothed with a lerp so it trails rather than snaps
+    if (!reduceMotion) {
+      const glow = document.getElementById('cursorGlow');
+      let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+      let gx = mx, gy = my;
+      window.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; });
+      function raf(){
+        gx += (mx - gx) * 0.08;
+        gy += (my - gy) * 0.08;
+        glow.style.transform = `translate(${gx}px, ${gy}px)`;
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+    }
+
+    // eyebrow underline draws in the first time each one enters view
+    (function(){
+      const eyebrows = document.querySelectorAll('.eyebrow');
+      if (!eyebrows.length) return;
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('in-view');
+          obs.unobserve(e.target);
+        });
+      }, { threshold: 0.6 });
+      eyebrows.forEach(el => io.observe(el));
+    })();
+
     // REC dot pulse
-    if (window.anime && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      anime({
-        targets: '.rec-dot',
+    if (!reduceMotion) {
+      animate('.rec-dot', {
         opacity: [1, 0.25],
         duration: 900,
-        easing: 'easeInOutSine',
-        direction: 'alternate',
+        ease: 'inOutSine',
+        alternate: true,
         loop: true
       });
     }
-  </script>
+
+    // hero terminal: fake live monitoring feed
+    (function(){
+      const termBody = document.getElementById('termBody');
+      if(!termBody) return;
+
+      const startup = [
+        ["SERVICE STARTED — LaptopGuard.Service v1.0","tone-boot"],
+        ["WATCHING: Security Log → Event ID 4625","tone-boot"],
+        ["WMI LISTENER ARMED — Win32_PnPEntity","tone-arm"],
+        ["DATABASE READY — laptopguard.db","tone-boot"],
+        ["…standing by","tone-idle"]
+      ];
+
+      const normalLogs = [
+        ["Monitoring Security Log...","tone-boot"],
+        ["USB Monitor heartbeat","tone-arm"],
+        ["No suspicious activity","tone-idle"],
+        ["Process snapshot completed","tone-boot"],
+        ["Camera idle","tone-idle"],
+        ["Watching Event ID 4625","tone-boot"],
+        ["SQLite checkpoint complete","tone-boot"],
+        ["Dashboard synchronized","tone-capture"],
+        ["Heartbeat OK","tone-boot"]
+      ];
+
+      let incident = 420;
+
+      function ts(){
+        return new Date().toLocaleTimeString("en-GB",{hour12:false});
+      }
+
+      function flash(){
+        animate(".terminal",{
+          borderColor:["#FF5C5C","#232A33"],
+          translateX:[0,-2,2,-2,2,0],
+          duration:550,
+          ease:"outQuad"
+        });
+        animate(".rec-dot",{
+          scale:[1,1.6,1],
+          duration:350
+        });
+      }
+
+      function add(text, cls){
+        const row=document.createElement("div");
+        row.className=`log-line ${cls}`;
+        row.innerHTML=`<span class="ts">[${ts()}]</span><span class="msg">${text}</span>`;
+        termBody.appendChild(row);
+
+        animate(row,{
+          opacity:[0,1],
+          translateY:[6,0],
+          duration:250,
+          ease:"outQuad"
+        });
+
+        while(termBody.children.length>15){
+          termBody.removeChild(termBody.firstChild);
+        }
+        termBody.scrollTop=termBody.scrollHeight;
+      }
+
+      termBody.innerHTML="";
+
+      let delay=300;
+      startup.forEach(([m,c])=>{
+        setTimeout(()=>add(m,c),delay);
+        delay+=350;
+      });
+
+      function schedule(){
+        const r=Math.random();
+
+        if(r<0.10){
+          flash();
+          add("FAILED LOGIN DETECTED — user: admin","tone-incident");
+          setTimeout(()=>add("CAPTURING WEBCAM...","tone-capture"),450);
+          setTimeout(()=>add(`SNAPSHOT: ${40+Math.floor(Math.random()*25)} processes running`,"tone-boot"),850);
+          setTimeout(()=>add(`INCIDENT #${incident++} LOGGED`,"tone-capture"),1200);
+          setTimeout(()=>add("DASHBOARD UPDATED","tone-idle"),1550);
+          setTimeout(schedule,2600);
+          return;
+        }
+
+        const log=normalLogs[Math.floor(Math.random()*normalLogs.length)];
+        add(log[0],log[1]);
+        setTimeout(schedule,1000+Math.random()*2500);
+      }
+
+      setTimeout(schedule,delay+800);
+    })();
+
+    // pipeline section: line grows stage-by-stage
+    (function(){
+      const stages=[...document.querySelectorAll('.stage')];
+      const line=document.querySelector('#pipelineSvg .draw');
+      if(!stages.length||!line||reduceMotion) return;
+
+      line.setAttribute('y1',0);
+      line.setAttribute('y2',0);
+
+      function updateLine(target){
+        const grid=document.getElementById('pipelineGrid');
+        const g=grid.getBoundingClientRect();
+        const r=target.getBoundingClientRect();
+        const y=(r.top-g.top)+(r.height/2);
+
+        animate(line,{
+          y2:y,
+          duration:280,
+          ease:'outQuad'
+        });
+      }
+
+      const shown=new Set();
+
+      const io=new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(!entry.isIntersecting) return;
+
+          const el=entry.target;
+          if(shown.has(el)) return;
+          shown.add(el);
+
+          updateLine(el);
+          window.dispatchEvent(new CustomEvent('pipeline-stage',{detail:{index:idx}}));
+
+          el.classList.add('active-stage');
+
+          animate(el,{
+            scale:[1,1.015,1],
+            duration:260,
+            ease:'outQuad'
+          });
+
+          setTimeout(()=>{
+            el.classList.remove('active-stage');
+          },700);
+
+        });
+      },{
+        threshold:.45
+      });
+
+      stages.forEach(s=>io.observe(s));
+    })();
+
+    // dashboard mockup: sidebar nav auto-cycles through real pages
+    (function(){
+      const nav = document.getElementById('mockNav');
+      const indicator = document.getElementById('navIndicator');
+      const content = document.getElementById('mockContent');
+      const items = nav ? Array.from(nav.querySelectorAll('li')) : [];
+      if (!nav || !content || !items.length) return;
+
+      const pages = [
+        {
+          name: 'Overview',
+          render: () => `
+            <div class="mock-eyebrow">OVERVIEW</div>
+            <div class="mock-metrics">
+              <div class="mock-metric"><div class="num">42</div><div class="lbl">TOTAL INCIDENTS</div></div>
+              <div class="mock-metric"><div class="num">3</div><div class="lbl">TODAY</div></div>
+              <div class="mock-metric"><div class="num">118</div><div class="lbl">PHOTOS CAPTURED</div></div>
+            </div>
+            <div class="mock-chart">
+              ${[38,52,30,71,44,90,60].map(h => `<div class="bar" style="height:${h}%"></div>`).join('')}
+            </div>`
+        },
+        {
+          name: 'Incidents',
+          render: () => `
+            <div class="mock-eyebrow">INCIDENTS</div>
+            <table class="mock-table">
+              <tr><th>TIMESTAMP</th><th>USER</th><th>REASON</th><th>EVIDENCE</th></tr>
+              <tr><td>09:14:41</td><td>admin</td><td>Bad password</td><td>3 photos</td></tr>
+              <tr><td>08:52:03</td><td>guest</td><td>Unknown user</td><td>1 photo</td></tr>
+              <tr><td>Yesterday</td><td>admin</td><td>Bad password</td><td>2 photos</td></tr>
+              <tr><td>Yesterday</td><td>admin</td><td>Locked out</td><td>4 photos</td></tr>
+            </table>`
+        },
+        {
+          name: 'USB Activity',
+          render: () => `
+            <div class="mock-eyebrow">USB ACTIVITY</div>
+            <table class="mock-table">
+              <tr><th>TIME</th><th>DEVICE</th><th>EVENT</th></tr>
+              <tr><td>09:14:41</td><td>USB Device</td><td><span class="tag cyan">Connected</span></td></tr>
+              <tr><td>09:16:02</td><td>Kingston DataTraveler</td><td><span class="tag muted">Removed</span></td></tr>
+              <tr><td>Yesterday</td><td>USB Device</td><td><span class="tag cyan">Connected</span></td></tr>
+            </table>`
+        },
+        {
+          name: 'Applications',
+          render: () => `
+            <div class="mock-eyebrow">APPLICATIONS</div>
+            <table class="mock-table">
+              <tr><th>PROCESS</th><th>PID</th><th>INCIDENT</th></tr>
+              <tr><td>chrome.exe</td><td>4021</td><td>#0418</td></tr>
+              <tr><td>explorer.exe</td><td>1188</td><td>#0418</td></tr>
+              <tr><td>steam.exe</td><td>7702</td><td>#0417</td></tr>
+              <tr><td>discord.exe</td><td>5390</td><td>#0417</td></tr>
+            </table>`
+        },
+        {
+          name: 'Gallery',
+          render: () => `
+            <div class="mock-eyebrow">GALLERY</div>
+            <div class="mock-gallery">
+              ${Array.from({length:8}).map((_,i) => `<div class="mock-photo">evidence_04${17-i%4}.jpg</div>`).join('')}
+            </div>`
+        },
+        {
+          name: 'Analytics',
+          render: () => `
+            <div class="mock-eyebrow">ANALYTICS — LAST 14 DAYS</div>
+            <div class="mock-chart">
+              ${[20,35,25,50,40,60,45,70,55,80,65,90,72,85].map(h => `<div class="bar" style="height:${h}%"></div>`).join('')}
+            </div>`
+        },
+        {
+          name: 'Settings',
+          render: () => `
+            <div class="mock-eyebrow">SETTINGS</div>
+            <div class="mock-kv">
+              <div class="row"><span class="k">Database</span><span class="v">laptopguard.db — 2.4 MB</span></div>
+              <div class="row"><span class="k">Photos stored</span><span class="v">118</span></div>
+              <div class="row"><span class="k">Session token</span><span class="v">expires in 6h 12m</span></div>
+              <div class="row"><span class="k">Auth</span><span class="v">TOTP — Google Authenticator</span></div>
+            </div>`
+        },
+      ];
+
+      const rowH = items[0].getBoundingClientRect().height || 39;
+
+      function countUp(el, target, duration=850){
+        const obj = { v: 0 };
+        animate(obj, {
+          v: target,
+          duration,
+          ease: 'outExpo',
+          onUpdate: () => { el.textContent = Math.round(obj.v); },
+        });
+      }
+
+      function animateContentIn(){
+        const bars = content.querySelectorAll('.mock-chart .bar');
+        if (bars.length) {
+          animate(bars, {
+            scaleY: [0, 1],
+            duration: 650,
+            delay: (el, i) => i * 45,
+            ease: 'outExpo',
+          });
+        }
+        content.querySelectorAll('.mock-metric .num').forEach(el => {
+          const target = parseInt(el.textContent, 10);
+          if (!isNaN(target)) countUp(el, target);
+        });
+      }
+
+      function goTo(i, animated){
+        items.forEach(li => li.classList.toggle('active', Number(li.dataset.i) === i));
+        content.innerHTML = pages[i].render();
+
+        if (animated && !reduceMotion) {
+          animate(indicator, { translateY: i * rowH, duration: 420, ease: 'outQuad' });
+          animate(content, { opacity: [0, 1], translateY: [6, 0], duration: 320, ease: 'outQuad' });
+          animateContentIn();
+        } else {
+          indicator.style.transform = `translateY(${i * rowH}px)`;
+          if (!reduceMotion) animateContentIn();
+        }
+      }
+
+      let active = 0;
+      let timer = null;
+
+      function startCycle(){
+        if (reduceMotion || timer) return;
+        timer = setInterval(() => {
+          active = (active + 1) % pages.length;
+          goTo(active, true);
+        }, 2600);
+      }
+      function stopCycle(){
+        clearInterval(timer);
+        timer = null;
+      }
+
+      function selectPage(i){
+        active = i;
+        goTo(active, true);
+        // pause the auto-cycle on manual selection; mouseleave (below) resumes it naturally
+        stopCycle();
+      }
+
+      items.forEach(li => {
+        li.addEventListener('click', () => selectPage(Number(li.dataset.i)));
+        li.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectPage(Number(li.dataset.i));
+          }
+        });
+      });
+
+      goTo(0, false);
+
+      if (reduceMotion) return;
+
+      // only auto-cycle once it's actually on screen, pause when scrolled away or hovered
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => e.isIntersecting ? startCycle() : stopCycle());
+      }, { threshold: 0.4 });
+      io.observe(document.querySelector('.mockup'));
+
+      document.querySelector('.mockup').addEventListener('mouseenter', stopCycle);
+      document.querySelector('.mockup').addEventListener('mouseleave', () => {
+        if (document.querySelector('.mockup').getBoundingClientRect().top < window.innerHeight) startCycle();
+      });
+    })();
+
+    // generic scroll-triggered stagger reveal, used by badges + stack table
+    (function(){
+      function revealOnScroll(selector, targets, opts = {}){
+        const container = document.querySelector(selector);
+        if (!container) return;
+        const els = container.querySelectorAll(targets);
+        if (!els.length) return;
+
+        if (reduceMotion) {
+          els.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+          return;
+        }
+
+        const containerIO = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            animate(els, {
+              opacity: [0, 1],
+              translateY: [10, 0],
+              translateX: opts.fromX ? [opts.fromX, 0] : undefined,
+              duration: 520,
+              delay: (el, i) => i * 90,
+              ease: 'outQuad',
+            });
+            obs.unobserve(entry.target);
+          });
+        }, { threshold: 0.2 });
+        containerIO.observe(container);
+      }
+
+      revealOnScroll('#badgeRow', '.badge');
+      revealOnScroll('#stackTable', 'tr', { fromX: -8 });
+    })();
+
+    // generic per-element scroll reveal: slides in from bottom or left as each
+    // element individually crosses into view (pipeline stages, section headings, mockup card)
+    (function(){
+      const items = document.querySelectorAll('[data-reveal]');
+      if (!items.length) return;
+
+      if (reduceMotion) {
+        items.forEach(el => { el.style.opacity = 1; });
+        return;
+      }
+
+      items.forEach(el => {
+        const dir = el.dataset.reveal;
+
+        // "notify" = comes from behind the page: starts small, blurred, and
+        // slightly sunken, then snaps forward into full focus. Replays every
+        // time it enters view — scrolling down OR back up.
+        if (dir === 'notify') {
+          const hide = () => {
+            el.style.opacity = 0;
+            el.style.transform = 'translateY(36px) scale(.84) rotateX(12deg)';
+            el.style.filter = 'blur(12px)';
+            el.style.boxShadow = '0 4px 10px rgba(0,0,0,.12)';
+          };
+
+          hide();
+
+          const io = new IntersectionObserver((entries)=>{
+            entries.forEach(entry=>{
+
+              if(entry.isIntersecting){
+
+                el.classList.remove('shine');
+                void el.offsetWidth;
+                el.classList.add('shine');
+
+                animate(el,{
+                  opacity:[0,1],
+                  translateY:[36,0],
+                  scale:[0.84,1.03,1],
+                  rotateX:[12,0],
+                  filter:['blur(12px)','blur(0px)'],
+                  boxShadow:[
+                    '0 4px 10px rgba(0,0,0,.12)',
+                    '0 24px 60px rgba(0,0,0,.45)',
+                    '0 18px 36px rgba(0,0,0,.35)'
+                  ],
+                  duration:520,
+                  ease:'outBack(1.8)'
+                });
+
+                const cards=[...document.querySelectorAll('.stage')];
+                const idx=cards.indexOf(el);
+
+                cards.forEach((card,i)=>{
+                  if(i>=idx) return;
+                  animate(card,{
+                    translateY:[0,-6+(i*2)],
+                    duration:420,
+                    ease:'outQuad'
+                  });
+                });
+
+              }else{
+                hide();
+              }
+
+            });
+          },{threshold:.3});
+
+          io.observe(el);
+          return;
+        }
+
+        const io = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const props = { opacity: [0, 1], duration: 900, ease: 'outExpo' };
+            if (dir === 'left') props.translateX = [-32, 0];
+            else if (dir === 'right') props.translateX = [32, 0];
+            else props.translateY = [30, 0];
+            animate(el, props);
+            obs.unobserve(el);
+          });
+        }, { threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
+        io.observe(el);
+      });
+    })();
+
+    // badge hover tilt — subtle 3D response to cursor position
+    (function(){
+      if (reduceMotion) return;
+      document.querySelectorAll('.badge').forEach(badge => {
+        badge.addEventListener('mousemove', (e) => {
+          const r = badge.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width - 0.5;
+          const py = (e.clientY - r.top) / r.height - 0.5;
+          animate(badge, {
+            rotateX: py * -8,
+            rotateY: px * 10,
+            translateY: -3,
+            duration: 300,
+            ease: 'outQuad',
+          });
+        });
+        badge.addEventListener('mouseleave', () => {
+          animate(badge, { rotateX: 0, rotateY: 0, translateY: 0, duration: 450, ease: 'outElastic(1, .6)' });
+        });
+      });
+    })();
+  
+// --- Minor polish bundle ---
+(function(){
+
+const feed=[
+"Event ID 4625 detected...",
+"Capturing webcam...",
+"Correlating evidence...",
+"Encrypting evidence...",
+"Dashboard updated."
+];
+
+window.addEventListener("pipeline-stage",e=>{
+ const body=document.getElementById("termBody");
+ if(!body) return;
+
+ const row=document.createElement("div");
+ row.className="log-line tone-capture";
+ row.innerHTML=`<span class="ts">[${new Date().toLocaleTimeString("en-GB",{hour12:false})}]</span><span class="msg">${feed[e.detail.index]||"Monitoring..."}</span>`;
+ body.appendChild(row);
+
+ while(body.children.length>15) body.removeChild(body.firstChild);
+
+ body.scrollTop=body.scrollHeight;
+});
+
+const grid=document.getElementById("bgGrid");
+if(grid){
+ const dot=document.createElement("div");
+ dot.className="gridPulse";
+ grid.appendChild(dot);
+ let x=0;
+ function move(){
+   x=(x+64)%window.innerWidth;
+   dot.style.transform=`translate(${x}px,${120+Math.sin(x/120)*80}px)`;
+   requestAnimationFrame(move);
+ }
+ move();
+}
+
+document.querySelectorAll(".stage").forEach(stage=>{
+ stage.addEventListener("mousemove",e=>{
+   const r=stage.getBoundingClientRect();
+   const rx=((e.clientY-r.top)/r.height-.5)*-3;
+   const ry=((e.clientX-r.left)/r.width-.5)*3;
+   stage.style.transform=`perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+ });
+ stage.addEventListener("mouseleave",()=>{
+   stage.style.transform="";
+ });
+});
+
+})();
+
+</script>
 </body>
 </html>
